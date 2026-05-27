@@ -49,7 +49,9 @@ Rules for the imposter hint:
   * shark → silent ✓ (people know sharks are quiet hunters, but silent fits many things)
   * candle → drips ✓ (everyone has seen candle wax drip, but drips fits many things)
   * guitar → hollow ✓ (widely known, but hollow fits drums/caves/chocolate eggs too)
-- Ask yourself: "if the imposter says this word mid-conversation, would the other players think it makes sense?" — if yes, it's good
+- The hint MUST be a direct physical or behavioural property of the word itself — NOT a cultural association, movie reference, song, brand, or thing "related to" it
+- Ask: "does the word itself actually have this property?" — if you're thinking of a movie, song, or brand connected to the word, that's wrong
+- Ask: "if the imposter says this word mid-conversation, would the other players think it makes sense?" — if yes, it's good
 - Never just name the category
 
 Respond with ONLY valid JSON, no markdown, no explanation:

@@ -191,10 +191,8 @@ const FALLBACK = {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
 
-  const { categories = [], usedWords = [] } = req.body;
+  const { categories = [], usedWords = [], server } = req.body;
   const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) return res.status(500).json({ error: 'Missing API key' });
 
   const categoryList = categories.length > 0 ? categories.join(', ') : 'everyday objects, animals, food, places';
   const avoidClause = usedWords.length > 0
@@ -231,7 +229,9 @@ Rules for the imposter hint:
   * shark → silent ✓ (people know sharks are quiet hunters, but silent fits many things)
   * candle → drips ✓ (everyone has seen candle wax drip, but drips fits many things)
   * guitar → hollow ✓ (widely known, but hollow fits drums/caves/chocolate eggs too)
-- Ask yourself: "if the imposter says this word mid-conversation, would the other players think it makes sense?" — if yes, it's good
+- The hint MUST be a direct physical or behavioural property of the word itself — NOT a cultural association, movie reference, song, brand, or thing "related to" it
+- Ask: "does the word itself actually have this property?" — if you're thinking of a movie, song, or brand connected to the word, that's wrong
+- Ask: "if the imposter says this word mid-conversation, would the other players think it makes sense?" — if yes, it's good
 - Never just name the category
 
 Respond with ONLY valid JSON, no markdown, no explanation:
@@ -248,35 +248,39 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     return { word: result.word, hint: result.hint };
   }
 
-  // ── Tier 1: Gemini ───────────────────────────────────────────
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 1.0, maxOutputTokens: 16000 },
-        }),
-      }
-    );
-    if (!response.ok) throw new Error(`Gemini ${response.status}`);
-
-    const data = await response.json();
-    const parts = data?.candidates?.[0]?.content?.parts || [];
-    const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
-    const output = parseResult(text);
-    console.log('Gemini output:', JSON.stringify(output));
-    return res.json(output);
-  } catch (err) {
-    console.error('Gemini failed, trying Groq:', err.message);
+  // ── Server 1: Gemini ─────────────────────────────────────────
+  if (!server || server === 1) {
+    try {
+      if (!apiKey) throw new Error('No Gemini key');
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 1.0, maxOutputTokens: 16000 },
+          }),
+        }
+      );
+      if (!response.ok) throw new Error(`Gemini ${response.status}`);
+      const data = await response.json();
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
+      const output = parseResult(text);
+      console.log('Server 1 (Gemini) output:', JSON.stringify(output));
+      return res.json(output);
+    } catch (err) {
+      console.error('Server 1 (Gemini) failed:', err.message);
+      if (server === 1) return res.status(502).json({ error: err.message });
+    }
   }
 
-  // ── Tier 2: Groq (qwen3-32b with thinking, free tier) ───────
-  const groqKey = process.env.GROQ_API_KEY;
-  if (groqKey) {
+  // ── Server 2: Groq qwen3-32b ──────────────────────────────────
+  if (!server || server === 2) {
+    const groqKey = process.env.GROQ_API_KEY;
     try {
+      if (!groqKey) throw new Error('No Groq key');
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -296,21 +300,22 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         }),
       });
       if (!response.ok) throw new Error(`Groq ${response.status}`);
-
       const data = await response.json();
       const text = data?.choices?.[0]?.message?.content?.trim() || '';
       const output = parseResult(text);
-      console.log('Groq output:', JSON.stringify(output));
+      console.log('Server 2 (Groq) output:', JSON.stringify(output));
       return res.json(output);
     } catch (err) {
-      console.error('Groq failed, trying OpenRouter:', err.message);
+      console.error('Server 2 (Groq) failed:', err.message);
+      if (server === 2) return res.status(502).json({ error: err.message });
     }
   }
 
-  // ── Tier 3: OpenRouter (openai/gpt-oss-120b:free, with reasoning) ───
-  const orKey = process.env.OPENROUTER_API_KEY;
-  if (orKey) {
+  // ── Server 3: OpenRouter gpt-oss-120b ────────────────────────
+  if (!server || server === 3) {
+    const orKey = process.env.OPENROUTER_API_KEY;
     try {
+      if (!orKey) throw new Error('No OpenRouter key');
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -324,18 +329,18 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         }),
       });
       if (!response.ok) throw new Error(`OpenRouter ${response.status}`);
-
       const data = await response.json();
       const text = data?.choices?.[0]?.message?.content?.trim() || '';
       const output = parseResult(text);
-      console.log('OpenRouter output:', JSON.stringify(output));
+      console.log('Server 3 (OpenRouter) output:', JSON.stringify(output));
       return res.json(output);
     } catch (err) {
-      console.error('OpenRouter failed, using hardcoded fallback:', err.message);
+      console.error('Server 3 (OpenRouter) failed:', err.message);
+      if (server === 3) return res.status(502).json({ error: err.message });
     }
   }
 
-  // ── Tier 4: hardcoded fallback ───────────────────────────────
+  // ── Fallback: hardcoded list ──────────────────────────────────
   const pool = categories.length > 0
     ? categories.flatMap(c => FALLBACK[c] || [])
     : Object.values(FALLBACK).flat();

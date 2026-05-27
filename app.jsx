@@ -680,6 +680,7 @@ function RevealScreen({ state, onBack }) {
   const [step, setStep] = useState(0);
   const [gameData, setGameData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMsg, setLoadingMsg] = useState('Picking a word…');
   const [shuffleSeed] = useState(() => Math.random());
 
   useEffect(() => {
@@ -704,38 +705,49 @@ function RevealScreen({ state, onBack }) {
 
     async function fetchWord() {
       setLoading(true);
+      setLoadingMsg('Picking a word…');
       const usedWords = loadUsedWords();
-      try {
-        const res = await fetch('/api/word', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ categories: state.categories, usedWords }),
-        });
-        const payload = await res.json();
-        if (!res.ok || payload.error) throw new Error(payload.error || 'API error');
-        const { word, hint } = payload;
-        if (cancelled) return;
-        saveUsedWord(word);
-        const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
-        setGameData({ word, hintCategory: hint, imposterIndices: idxs });
-      } catch {
-        if (cancelled) return;
-        // Fallback — also avoid this group's used words
+      const body = { categories: state.categories, usedWords };
+
+      let word, hint;
+
+      for (let s = 1; s <= 3; s++) {
+        try {
+          const res = await fetch('/api/word', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...body, server: s }),
+          });
+          const payload = await res.json();
+          if (!res.ok || payload.error) throw new Error(payload.error || 'API error');
+          word = payload.word;
+          hint = payload.hint;
+          break; // success
+        } catch {
+          if (cancelled) return;
+          if (s < 3) setLoadingMsg(`Server ${s} failed, trying Server ${s + 1}…`);
+        }
+      }
+
+      if (cancelled) return;
+
+      if (!word) {
+        // All servers failed — local fallback
         const pool = state.categories.length
           ? state.categories.flatMap(c => SECRET_WORDS[c] || [])
           : Object.values(SECRET_WORDS).flat();
         const available = pool.filter(w => !usedWords.map(u => u.toLowerCase()).includes(w.toLowerCase()));
         const candidates = available.length > 0 ? available : pool;
-        const w = candidates[Math.floor(shuffleSeed * candidates.length)] || 'Mystery';
-        if (!cancelled) saveUsedWord(w);
-        const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
-        const cat = state.categories.length
+        word = candidates[Math.floor(shuffleSeed * candidates.length)] || 'Mystery';
+        hint = state.categories.length
           ? CATEGORIES.find(c => c.id === state.categories[0])?.label.toLowerCase()
           : 'a noun';
-        setGameData({ word: w, hintCategory: cat, imposterIndices: idxs });
-      } finally {
-        if (!cancelled) setLoading(false);
       }
+
+      saveUsedWord(word);
+      const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
+      setGameData({ word, hintCategory: hint, imposterIndices: idxs });
+      setLoading(false);
     }
     fetchWord();
     return () => { cancelled = true; };
@@ -757,8 +769,23 @@ function RevealScreen({ state, onBack }) {
         </div>
         <div style={{
           fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: 1.5,
-          color: T.ink, textTransform: 'uppercase',
-        }}>Picking a word…</div>
+          color: T.ink, textTransform: 'uppercase', textAlign: 'center', maxWidth: 260,
+        }}>{loadingMsg}</div>
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 6, justifyContent: 'center', maxWidth: 280,
+        }}>
+          {(state.categories.length > 0 ? state.categories : CATEGORIES.map(c => c.id)).map(id => {
+            const cat = CATEGORIES.find(c => c.id === id);
+            return cat ? (
+              <div key={id} style={{
+                padding: '4px 10px', borderRadius: 999,
+                background: T.paperDeep, border: '1px solid rgba(0,0,0,0.07)',
+                fontFamily: 'Inter, sans-serif', fontSize: 12, fontWeight: 600,
+                color: T.inkSoft, letterSpacing: 0.3,
+              }}>{cat.label}</div>
+            ) : null;
+          })}
+        </div>
       </div>
     );
   }
@@ -1108,25 +1135,17 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
     return pool[Math.floor(Math.random() * pool.length)];
   });
 
-  // Circular speaking order starting from starterIdx
-  const speakingOrder = state.players.map((_, i) =>
-    state.players[(starterIdx + i) % state.players.length]
-  );
+  const starterName = state.players[starterIdx];
 
   return (
     <div style={{
       background: 'transparent', height: '100%', minHeight: '100dvh',
-      padding: '28px 28px 30px',
+      padding: '28px 24px 34px',
       display: 'flex', flexDirection: 'column',
       boxSizing: 'border-box',
     }}>
-      {/* header — logo + close */}
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-        marginBottom: 18,
-      }}>
-        <div style={{ width: 36 }} />
-        <LogoBadge />
+      {/* close button only */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 8 }}>
         <button onClick={onBack} aria-label="close" style={{
           width: 36, height: 36, borderRadius: 999, background: 'transparent',
           border: 'none', cursor: 'pointer',
@@ -1140,64 +1159,29 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
 
       {!revealed ? (
         <>
-          <h1 style={{
-            fontFamily: 'Archivo Black, sans-serif', fontSize: 42,
-            lineHeight: 1.05, letterSpacing: -1, color: T.ink,
-            margin: '12px 0 18px', textWrap: 'pretty',
-          }}>
-            Game started! Time to talk and catch the imposter.
-          </h1>
+          {/* kicker */}
           <div style={{
-            fontFamily: 'Inter, sans-serif', fontSize: 18, color: T.inkSoft,
-            lineHeight: 1.4, marginBottom: 20,
+            fontFamily: 'Inter, sans-serif', fontSize: 12, fontWeight: 700,
+            letterSpacing: 2, color: T.muted, textTransform: 'uppercase', marginBottom: 10,
+          }}>Goes first</div>
+
+          {/* big starter name */}
+          <div style={{
+            fontFamily: 'Archivo Black, sans-serif',
+            fontSize: 'clamp(48px, 14vw, 80px)',
+            lineHeight: 1, letterSpacing: -2,
+            color: T.ink, textTransform: 'uppercase',
+            marginBottom: 20, wordBreak: 'break-word',
+          }}>{starterName}</div>
+
+          <div style={{
+            fontFamily: 'Inter, sans-serif', fontSize: 17, color: T.inkSoft,
+            lineHeight: 1.5, maxWidth: 300,
           }}>
-            <span style={{
-              background: T.lime, padding: '2px 10px', borderRadius: 6,
-              fontWeight: 700, color: T.ink,
-              boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone',
-            }}>{speakingOrder[0]}</span>{' '}
-            starts the conversation!
+            Ask, answer, and figure out who doesn't know the word.
           </div>
 
-          {/* Circular speaking order */}
-          <div style={{
-            background: T.card, border: '1px solid rgba(0,0,0,0.05)',
-            borderRadius: 18, padding: '14px 18px',
-            boxShadow: '0 2px 6px rgba(20,18,12,0.08)',
-          }}>
-            <div style={{
-              fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: 1.8,
-              fontWeight: 700, color: T.muted, marginBottom: 10,
-            }}>SPEAKING ORDER</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {speakingOrder.map((name, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <div style={{
-                    width: 24, height: 24, borderRadius: 999, flexShrink: 0,
-                    background: i === 0 ? T.lime : T.paperDeep,
-                    border: '1px solid rgba(0,0,0,0.05)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: T.ink,
-                  }}>{i + 1}</div>
-                  <div style={{
-                    fontFamily: 'Inter, sans-serif', fontWeight: i === 0 ? 700 : 500,
-                    fontSize: 15, color: i === 0 ? T.ink : T.inkSoft,
-                  }}>{name}</div>
-                  {i === 0 && (
-                    <div style={{
-                      marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif',
-                      fontSize: 10, letterSpacing: 1, color: T.lime,
-                      background: T.ink, padding: '2px 7px', borderRadius: 4,
-                    }}>STARTS</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
+          <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <button onClick={() => setRevealed(true)} style={{
               width: '100%', height: 64, borderRadius: 999,
               background: T.card, color: T.ink,
@@ -1208,8 +1192,8 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
 
             <button onClick={() => setConfirmNew(true)} style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
-              fontFamily: 'Inter, sans-serif', fontSize: 16, fontWeight: 600,
-              color: T.ink, textDecoration: 'underline', textUnderlineOffset: 4,
+              fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600,
+              color: T.muted, textDecoration: 'underline', textUnderlineOffset: 4,
             }}>New Game</button>
           </div>
         </>
