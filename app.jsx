@@ -485,7 +485,7 @@ function SetupScreen({ state, set, onStart, openSheet, theme, onTheme }) {
 
   return (
     <div style={{
-      background: T.paper, minHeight: '100%',
+      background: 'transparent', minHeight: '100%',
       paddingTop: 28, paddingBottom: 140,
     }}>
       <PosterHeader onHelp={() => openSheet('howto')} theme={theme} onTheme={onTheme} />
@@ -685,19 +685,21 @@ function RevealScreen({ state, onBack }) {
   useEffect(() => {
     let cancelled = false;
 
-    // Group key = sorted player names — each unique group tracks its own word history
-    const groupKey = [...state.players].sort().join('|');
-
+    // Per-player word history — each player tracks their own seen words.
+    // usedWords = union of all current players' histories, so partial-group overlap works.
     function loadUsedWords() {
-      const history = JSON.parse(localStorage.getItem('imposter_word_history') || '{}');
-      return history[groupKey] || [];
+      const history = JSON.parse(localStorage.getItem('imposter_player_words') || '{}');
+      const wordSet = new Set();
+      state.players.forEach(name => (history[name] || []).forEach(w => wordSet.add(w)));
+      return [...wordSet];
     }
 
     function saveUsedWord(word) {
-      const history = JSON.parse(localStorage.getItem('imposter_word_history') || '{}');
-      const prev = history[groupKey] || [];
-      history[groupKey] = [...new Set([...prev, word])].slice(-500);
-      localStorage.setItem('imposter_word_history', JSON.stringify(history));
+      const history = JSON.parse(localStorage.getItem('imposter_player_words') || '{}');
+      state.players.forEach(name => {
+        history[name] = [...new Set([...(history[name] || []), word])].slice(-200);
+      });
+      localStorage.setItem('imposter_player_words', JSON.stringify(history));
     }
 
     async function fetchWord() {
@@ -742,7 +744,7 @@ function RevealScreen({ state, onBack }) {
   if (loading) {
     return (
       <div style={{
-        height: '100%', minHeight: '100dvh', background: T.paper,
+        height: '100%', minHeight: '100dvh', background: 'transparent',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         gap: 18,
       }}>
@@ -777,7 +779,7 @@ function RevealScreen({ state, onBack }) {
 
   return (
     <div style={{
-      background: T.paper, height: '100%', minHeight: '100dvh',
+      background: 'transparent', height: '100%', minHeight: '100dvh',
       paddingTop: 56, paddingBottom: 30,
       display: 'flex', flexDirection: 'column',
       boxSizing: 'border-box',
@@ -1113,7 +1115,7 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
 
   return (
     <div style={{
-      background: T.paper, height: '100%', minHeight: '100dvh',
+      background: 'transparent', height: '100%', minHeight: '100dvh',
       padding: '28px 28px 30px',
       display: 'flex', flexDirection: 'column',
       boxSizing: 'border-box',
@@ -1372,15 +1374,23 @@ function App() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [screen, setScreen] = useState('setup');
   const [sheet, setSheet] = useState(null);
-  const [state, setState] = useState({
-    players: ['Player 1','Player 2','Player 3','Player 4'],
-    categories: [],
-    imposters: 1,
-    timeOn: false,
-    seconds: 120,
-    hint: true,
+  const [state, setState] = useState(() => {
+    const savedPlayers = JSON.parse(localStorage.getItem('imposter_players') || 'null');
+    return {
+      players: savedPlayers || ['Player 1','Player 2','Player 3','Player 4'],
+      categories: [],
+      imposters: 1,
+      timeOn: false,
+      seconds: 120,
+      hint: true,
+    };
   });
   const set = (patch) => setState(s => ({ ...s, ...patch }));
+
+  // Persist player names whenever they change
+  useEffect(() => {
+    localStorage.setItem('imposter_players', JSON.stringify(state.players));
+  }, [state.players]);
 
   // apply theme — mutate the shared window.T so every component picks up new values
   window.applyTheme(tweaks.theme);
@@ -1390,7 +1400,7 @@ function App() {
   return (
     <>
       <div className="phone" style={{
-        height: '100dvh', minHeight: '100dvh', background: T.paper,
+        height: '100dvh', minHeight: '100dvh', background: 'transparent',
         position: 'relative', overflow: 'hidden',
         fontFamily: '-apple-system, system-ui, sans-serif',
         WebkitFontSmoothing: 'antialiased',

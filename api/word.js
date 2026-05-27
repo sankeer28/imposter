@@ -211,20 +211,27 @@ Rules for the word:
 - Avoid overly abstract words
 
 Rules for the imposter hint:
-- The imposter does NOT know the word — give them a clue they can actually use to sound convincing in conversation
+- The imposter does NOT know the word — give them a one-word clue they can drop into conversation to sound like they know it
 - The hint must be a SINGLE word only — no phrases, no "It's ...", no punctuation
-- It should be intuitive and usable — something the imposter can naturally work into sentences
-- Not too obvious (don't give away the word) but not too cryptic
-- Sweet spot: a well-known property of the word that also applies to a few other things
-- Good examples:
-  * ginger → spicy
-  * popcorn → yellow
-  * chair → legs
-  * guitar → strings
-  * ice cream → melts
-  * shark → teeth
-  * candle → wax
-- Avoid obscure or weird associations (no "knob", "protrusion", "fibrous")
+- The hint MUST pass TWO tests:
+  1. WIDELY KNOWN: most people would immediately nod and say "yeah, that's true of it" — not an obscure fact
+  2. NOT THE FIRST THING: it shouldn't be the single most iconic property that defines the word
+- Bad hints fail test 1 — too obscure, imposter sounds clueless:
+  * cucumber → ribbed ❌ (most people don't think of cucumbers as ribbed — imposter sounds wrong)
+  * shark → cartilage ❌ (biology trivia, not something you'd naturally say)
+  * piano → lacquered ❌ (too specific, sounds weird in conversation)
+- Bad hints fail test 2 — too defining, gives away the word immediately:
+  * clock → ticking ❌ (most iconic clock property)
+  * pen → ink ❌ (first thing anyone says about a pen)
+  * banana → yellow ❌ (too defining)
+- Good hints pass BOTH tests — widely known AND not the first thing you'd say:
+  * cashew → curved ✓ (everyone knows the shape, but "curved" doesn't instantly scream cashew)
+  * cucumber → crunchy ✓ (everyone agrees, but crunchy fits carrots/apples/chips too)
+  * clock → round ✓ (obviously true, but round fits many things)
+  * shark → silent ✓ (people know sharks are quiet hunters, but silent fits many things)
+  * candle → drips ✓ (everyone has seen candle wax drip, but drips fits many things)
+  * guitar → hollow ✓ (widely known, but hollow fits drums/caves/chocolate eggs too)
+- Ask yourself: "if the imposter says this word mid-conversation, would the other players think it makes sense?" — if yes, it's good
 - Never just name the category
 
 Respond with ONLY valid JSON, no markdown, no explanation:
@@ -232,7 +239,8 @@ Respond with ONLY valid JSON, no markdown, no explanation:
 
   // ── helpers ──────────────────────────────────────────────────
   function parseResult(text) {
-    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const noThink = text.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+    const stripped = noThink.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     const match = stripped.match(/\{[\s\S]*\}/);
     if (!match) throw new Error(`No JSON in: ${text}`);
     const result = JSON.parse(match[0]);
@@ -265,7 +273,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     console.error('Gemini failed, trying Groq:', err.message);
   }
 
-  // ── Tier 2: Groq (llama-3.3-70b-versatile, free tier) ───────
+  // ── Tier 2: Groq (qwen3-32b with thinking, free tier) ───────
   const groqKey = process.env.GROQ_API_KEY;
   if (groqKey) {
     try {
@@ -276,10 +284,15 @@ Respond with ONLY valid JSON, no markdown, no explanation:
           'Authorization': `Bearer ${groqKey}`,
         },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: 'qwen/qwen3-32b',
           messages: [{ role: 'user', content: prompt }],
-          temperature: 1.0,
-          max_tokens: 120,
+          temperature: 1,
+          max_completion_tokens: 4000,
+          top_p: 1,
+          stream: false,
+          stop: null,
+          reasoning_effort: 'default',
+          reasoning_format: 'raw',
         }),
       });
       if (!response.ok) throw new Error(`Groq ${response.status}`);
@@ -290,11 +303,39 @@ Respond with ONLY valid JSON, no markdown, no explanation:
       console.log('Groq output:', JSON.stringify(output));
       return res.json(output);
     } catch (err) {
-      console.error('Groq failed, using hardcoded fallback:', err.message);
+      console.error('Groq failed, trying OpenRouter:', err.message);
     }
   }
 
-  // ── Tier 3: hardcoded fallback ───────────────────────────────
+  // ── Tier 3: OpenRouter (openai/gpt-oss-120b:free, with reasoning) ───
+  const orKey = process.env.OPENROUTER_API_KEY;
+  if (orKey) {
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${orKey}`,
+        },
+        body: JSON.stringify({
+          model: 'openai/gpt-oss-120b:free',
+          messages: [{ role: 'user', content: prompt }],
+          reasoning: { enabled: true },
+        }),
+      });
+      if (!response.ok) throw new Error(`OpenRouter ${response.status}`);
+
+      const data = await response.json();
+      const text = data?.choices?.[0]?.message?.content?.trim() || '';
+      const output = parseResult(text);
+      console.log('OpenRouter output:', JSON.stringify(output));
+      return res.json(output);
+    } catch (err) {
+      console.error('OpenRouter failed, using hardcoded fallback:', err.message);
+    }
+  }
+
+  // ── Tier 4: hardcoded fallback ───────────────────────────────
   const pool = categories.length > 0
     ? categories.flatMap(c => FALLBACK[c] || [])
     : Object.values(FALLBACK).flat();
