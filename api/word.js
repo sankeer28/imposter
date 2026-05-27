@@ -18,21 +18,21 @@ Rules for the word:
 - Avoid overly abstract words
 
 Rules for the imposter hint:
-- The imposter does NOT know the word — give them a subtle, indirect clue they can use to bluff
+- The imposter does NOT know the word — give them a clue they can actually use to sound convincing in conversation
 - The hint must be 1–3 words max
-- It should be a secondary or non-obvious association — NOT the first thing anyone thinks of
-- Avoid direct sensory giveaways (e.g. don't say "crunchy" for popcorn, "cold" for ice cream, "red" for apple)
-- Prefer shape, motion, context, or a less obvious physical property
-- The hint alone should NOT let someone guess the word immediately
+- It should be intuitive and usable — something the imposter can naturally work into sentences like "yeah it has that quality" or "I was thinking about how it does that"
+- Not too obvious (don't give away the word) but not too cryptic (imposter must be able to use it)
+- Sweet spot: a well-known property of the word that also applies to a few other things
 - Good examples:
-  * popcorn → kernel (not "crunchy" — too obvious)
-  * cashew → curved (shape, indirect)
-  * chair → legs (shared with tables, not a giveaway)
-  * ranch → dip (action, not "white" or "creamy")
-  * guitar → strings (but not "music" — too broad is fine, too specific is bad)
-  * balloon → floats
-  * ice cream → scooped (not "cold" or "sweet")
-- Never reveal the category name as the hint
+  * ginger → spicy (useful for bluffing, not a dead giveaway)
+  * popcorn → yellow (not "crunchy" — too obvious, not "kernel" — too obscure)
+  * chair → legs (useful, shared with tables and other things)
+  * guitar → strings (useful, shared with violin etc.)
+  * ice cream → melts (useful, not too obvious)
+  * shark → teeth (useful, not a giveaway)
+  * candle → wax (useful, specific enough to work with)
+- Avoid overly obscure or weird associations (no "knob", "protrusion", "fibrous")
+- Never just name the category
 
 Respond with ONLY valid JSON, no markdown, no explanation:
 {"word": "...", "hint": "..."}`;
