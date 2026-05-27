@@ -650,26 +650,35 @@ function RevealScreen({ state, onBack }) {
     let cancelled = false;
     async function fetchWord() {
       setLoading(true);
+      // Load used words from localStorage
+      const usedWords = JSON.parse(localStorage.getItem('imposter_used_words') || '[]');
       try {
         const res = await fetch('/api/word', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ categories: state.categories }),
+          body: JSON.stringify({ categories: state.categories, usedWords }),
         });
         const payload = await res.json();
         if (!res.ok || payload.error) throw new Error(payload.error || 'API error');
         const { word, hint } = payload;
         if (cancelled) return;
+        // Save word to used list (keep last 200 to avoid infinite growth)
+        const updated = [...new Set([...usedWords, word])].slice(-200);
+        localStorage.setItem('imposter_used_words', JSON.stringify(updated));
         const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
         const idxs = pickN(state.players.length, state.imposters, rng);
         setGameData({ word, hintCategory: hint, imposterIndices: idxs });
       } catch {
         if (cancelled) return;
-        // Fallback to built-in words
+        // Fallback to built-in words, also avoiding used words
         const pool = state.categories.length
           ? state.categories.flatMap(c => SECRET_WORDS[c] || [])
           : Object.values(SECRET_WORDS).flat();
-        const w = pool[Math.floor(shuffleSeed * pool.length)] || 'Mystery';
+        const available = pool.filter(w => !usedWords.map(u => u.toLowerCase()).includes(w.toLowerCase()));
+        const candidates = available.length > 0 ? available : pool;
+        const w = candidates[Math.floor(shuffleSeed * candidates.length)] || 'Mystery';
+        const updated = [...new Set([...usedWords, w])].slice(-200);
+        localStorage.setItem('imposter_used_words', JSON.stringify(updated));
         const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
         const idxs = pickN(state.players.length, state.imposters, rng);
         const cat = state.categories.length
