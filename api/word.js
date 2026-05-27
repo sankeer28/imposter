@@ -41,7 +41,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 1.0, maxOutputTokens: 80 },
+          generationConfig: { temperature: 1.0, maxOutputTokens: 256 },
         }),
       }
     );
@@ -52,8 +52,10 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     }
 
     const data = await response.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    const match = text.match(/\{[\s\S]*\}/);
+    const text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
+    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const match = stripped.match(/\{[\s\S]*\}/);
     if (!match) throw new Error(`No JSON in response: ${text}`);
     const result = JSON.parse(match[0]);
     if (!result.word || !result.hint) throw new Error(`Incomplete response: ${text}`);
