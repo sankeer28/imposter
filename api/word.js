@@ -46,23 +46,21 @@ Respond with ONLY valid JSON, no markdown, no explanation:
       }
     );
 
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini ${response.status}: ${errText}`);
+    }
+
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     const match = text.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON in response');
+    if (!match) throw new Error(`No JSON in response: ${text}`);
     const result = JSON.parse(match[0]);
-    if (!result.word || !result.hint) throw new Error('Incomplete response');
+    if (!result.word || !result.hint) throw new Error(`Incomplete response: ${text}`);
     res.json({ word: result.word, hint: result.hint });
   } catch (err) {
-    // Fallback: pick from a small built-in list
-    const fallback = [
-      { word: 'Umbrella', hint: 'folds' },
-      { word: 'Telescope', hint: 'extends' },
-      { word: 'Hammock', hint: 'sways' },
-      { word: 'Candle', hint: 'melts' },
-      { word: 'Compass', hint: 'spins' },
-    ];
-    const item = fallback[Math.floor(Math.random() * fallback.length)];
-    res.json(item);
+    console.error('Gemini error:', err.message);
+    // Return the error so the client can show it in dev, fall back gracefully in prod
+    res.status(502).json({ error: err.message });
   }
 }

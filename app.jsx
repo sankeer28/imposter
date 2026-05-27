@@ -656,8 +656,9 @@ function RevealScreen({ state, onBack }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ categories: state.categories }),
         });
-        if (!res.ok) throw new Error('API error');
-        const { word, hint } = await res.json();
+        const payload = await res.json();
+        if (!res.ok || payload.error) throw new Error(payload.error || 'API error');
+        const { word, hint } = payload;
         if (cancelled) return;
         const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
         const idxs = pickN(state.players.length, state.imposters, rng);
