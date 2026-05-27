@@ -41,8 +41,11 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 1.0, maxOutputTokens: 256 },
-          thinkingConfig: { thinkingBudget: 0 },
+          generationConfig: {
+            temperature: 1.0,
+            maxOutputTokens: 256,
+            thinkingConfig: { thinkingBudget: 0 },
+          },
         }),
       }
     );
