@@ -897,12 +897,12 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
         transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
         cursor: 'pointer',
       }}>
-        {/* FRONT face */}
+        {/* FRONT face — always dark text, card backgrounds are always vivid colours */}
         <CardFace color={color} bordered>
           <div style={{
             width: '100%', marginTop: 18, padding: '0 12px',
             fontFamily: 'Archivo Black, sans-serif', letterSpacing: 0.5,
-            color: T.ink, textShadow: '2px 3px 0 rgba(0,0,0,0.10)',
+            color: '#15161B', textShadow: '2px 3px 0 rgba(0,0,0,0.10)',
             textTransform: 'uppercase',
           }}>
             <AutoFitText max={48} min={24}>{playerName}</AutoFitText>
@@ -910,7 +910,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
           <div style={{
             marginTop: 16, textAlign: 'center',
             fontFamily: 'Inter, sans-serif', fontSize: 16, lineHeight: 1.4,
-            color: T.ink, fontWeight: 500, maxWidth: 280,
+            color: '#15161B', fontWeight: 500, maxWidth: 280,
           }}>
             Do not tell the word to<br/>other players.
           </div>
@@ -922,7 +922,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
             <TapHandIcon />
             <div style={{
               fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: 1.5,
-              color: T.ink,
+              color: '#15161B',
             }}>HOLD TO REVEAL</div>
           </div>
         </CardFace>
@@ -990,15 +990,22 @@ function CardFace({ color, children, back }) {
       position: 'absolute', inset: 0, borderRadius: 28,
       background: color, border: '1px solid rgba(0,0,0,0.05)',
       boxShadow: '0 16px 38px rgba(20,18,12,0.14), 0 6px 14px rgba(20,18,12,0.06)',
-      overflow: 'hidden',
-      padding: '38px 24px 30px',
-      display: 'flex', flexDirection: 'column', alignItems: 'center',
+      // overflow:hidden must NOT be on the 3D face itself — it breaks backface-visibility on Safari/iOS.
+      // Clip is handled by the inner wrapper instead.
       backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
-      transform: back ? 'rotateY(180deg)' : 'none',
+      // translateZ separates front/back into distinct GPU layers, preventing bleed-through.
+      transform: back ? 'rotateY(180deg) translateZ(1px)' : 'rotateY(0deg) translateZ(0px)',
+      willChange: 'transform',
     }}>
-      <Sunburst color={color} />
+      {/* Clip wrapper — keeps Sunburst inside rounded corners without breaking 3D */}
+      <div style={{
+        position: 'absolute', inset: 0, borderRadius: 28, overflow: 'hidden', pointerEvents: 'none',
+      }}>
+        <Sunburst color={color} />
+      </div>
       <div style={{
         position: 'relative', zIndex: 1, width: '100%', height: '100%',
+        padding: '38px 24px 30px',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
       }}>
         {children}
@@ -1039,14 +1046,13 @@ function AutoFitText({ children, max = 64, min = 22, style = {} }) {
 function TapHandIcon() {
   return (
     <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-      {/* hand outline */}
+      {/* hand outline — always dark, lives on vivid card background */}
       <path d="M24 38 V20 a3 3 0 016 0 v14 m0-6 V14 a3 3 0 016 0 v18 m0-4 V16 a3 3 0 016 0 v18 m0-2 V22 a3 3 0 016 0 v18 c0 7-4 14-13 14 -7 0-11-4-13-9 l-4-10 c-1-3 1-5 4-4 l4 2"
-        stroke={T.ink} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      {/* tap ripples above */}
-      <path d="M22 10 q2 -3 6 -3" stroke={T.ink} strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
-      <path d="M44 10 q-2 -3 -6 -3" stroke={T.ink} strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
-      <path d="M16 14 q3 -6 10 -7" stroke={T.ink} strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
-      <path d="M50 14 q-3 -6 -10 -7" stroke={T.ink} strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+        stroke="#15161B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+      <path d="M22 10 q2 -3 6 -3" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
+      <path d="M44 10 q-2 -3 -6 -3" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
+      <path d="M16 14 q3 -6 10 -7" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+      <path d="M50 14 q-3 -6 -10 -7" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
     </svg>
   );
 }
