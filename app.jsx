@@ -684,10 +684,25 @@ function RevealScreen({ state, onBack }) {
 
   useEffect(() => {
     let cancelled = false;
+
+    // Group key = sorted player names — each unique group tracks its own word history
+    const groupKey = [...state.players].sort().join('|');
+
+    function loadUsedWords() {
+      const history = JSON.parse(localStorage.getItem('imposter_word_history') || '{}');
+      return history[groupKey] || [];
+    }
+
+    function saveUsedWord(word) {
+      const history = JSON.parse(localStorage.getItem('imposter_word_history') || '{}');
+      const prev = history[groupKey] || [];
+      history[groupKey] = [...new Set([...prev, word])].slice(-500);
+      localStorage.setItem('imposter_word_history', JSON.stringify(history));
+    }
+
     async function fetchWord() {
       setLoading(true);
-      // Load used words from localStorage
-      const usedWords = JSON.parse(localStorage.getItem('imposter_used_words') || '[]');
+      const usedWords = loadUsedWords();
       try {
         const res = await fetch('/api/word', {
           method: 'POST',
@@ -698,22 +713,19 @@ function RevealScreen({ state, onBack }) {
         if (!res.ok || payload.error) throw new Error(payload.error || 'API error');
         const { word, hint } = payload;
         if (cancelled) return;
-        // Save word to used list (keep last 200 to avoid infinite growth)
-        const updated = [...new Set([...usedWords, word])].slice(-200);
-        localStorage.setItem('imposter_used_words', JSON.stringify(updated));
+        saveUsedWord(word);
         const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
         setGameData({ word, hintCategory: hint, imposterIndices: idxs });
       } catch {
         if (cancelled) return;
-        // Fallback to built-in words, also avoiding used words
+        // Fallback — also avoid this group's used words
         const pool = state.categories.length
           ? state.categories.flatMap(c => SECRET_WORDS[c] || [])
           : Object.values(SECRET_WORDS).flat();
         const available = pool.filter(w => !usedWords.map(u => u.toLowerCase()).includes(w.toLowerCase()));
         const candidates = available.length > 0 ? available : pool;
         const w = candidates[Math.floor(shuffleSeed * candidates.length)] || 'Mystery';
-        const updated = [...new Set([...usedWords, w])].slice(-200);
-        localStorage.setItem('imposter_used_words', JSON.stringify(updated));
+        if (!cancelled) saveUsedWord(w);
         const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
         const cat = state.categories.length
           ? CATEGORIES.find(c => c.id === state.categories[0])?.label.toLowerCase()
