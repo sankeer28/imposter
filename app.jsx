@@ -1045,14 +1045,12 @@ function AutoFitText({ children, max = 64, min = 22, style = {} }) {
 // Simple finger-tap icon — clean stroke design
 function TapHandIcon() {
   return (
-    <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-      {/* hand outline — always dark, lives on vivid card background */}
-      <path d="M24 38 V20 a3 3 0 016 0 v14 m0-6 V14 a3 3 0 016 0 v18 m0-4 V16 a3 3 0 016 0 v18 m0-2 V22 a3 3 0 016 0 v18 c0 7-4 14-13 14 -7 0-11-4-13-9 l-4-10 c-1-3 1-5 4-4 l4 2"
-        stroke="#15161B" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-      <path d="M22 10 q2 -3 6 -3" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
-      <path d="M44 10 q-2 -3 -6 -3" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.55"/>
-      <path d="M16 14 q3 -6 10 -7" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
-      <path d="M50 14 q-3 -6 -10 -7" stroke="#15161B" strokeWidth="2" strokeLinecap="round" opacity="0.3"/>
+    <svg width="52" height="52" viewBox="0 0 24 24" fill="none"
+      stroke="#15161B" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+      <path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2" />
+      <path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8" />
+      <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
     </svg>
   );
 }
