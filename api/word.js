@@ -21,13 +21,13 @@ Rules for the imposter hint:
 - The imposter does NOT know the word — give them one subtle physical or behavioral clue about the word
 - The hint must be a single evocative word or very short phrase (1–3 words max)
 - It should hint at a sensory property, shape, action, or association — NOT the category name
-- Examples of good hints:
-  * word "cashew" → hint "curved" (the nut's shape)
-  * word "chair" → hint "legs" (it has legs)
-  * word "ranch" → hint "dip" (you dip things in it)
-  * word "guitar" → hint "strings" (has strings)
-  * word "balloon" → hint "floats" (it floats)
-  * word "ladder" → hint "rungs" (has rungs)
+- Examples:
+  * cashew → curved
+  * chair → legs
+  * ranch → dip
+  * guitar → strings
+  * balloon → floats
+  * ladder → rungs
 - Never reveal the category name as the hint
 
 Respond with ONLY valid JSON, no markdown, no explanation:
@@ -41,11 +41,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 1.0,
-            maxOutputTokens: 256,
-            thinkingConfig: { thinkingBudget: 0 },
-          },
+          generationConfig: { temperature: 1.0, maxOutputTokens: 8192 },
         }),
       }
     );
@@ -56,17 +52,26 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     }
 
     const data = await response.json();
-    const text = (data?.candidates?.[0]?.content?.parts?.[0]?.text || '').trim();
-    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+
+    // Thinking model returns multiple parts — filter out thought parts, keep only the real response
+    const parts = data?.candidates?.[0]?.content?.parts || [];
+    const text = parts
+      .filter(p => !p.thought)
+      .map(p => p.text || '')
+      .join('')
+      .trim();
+
+    // Strip markdown code fences if present
     const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
     const match = stripped.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error(`No JSON in response: ${text}`);
+    if (!match) throw new Error(`Unexpected format: ${text}`);
+
     const result = JSON.parse(match[0]);
-    if (!result.word || !result.hint) throw new Error(`Incomplete response: ${text}`);
+    if (!result.word || !result.hint) throw new Error(`Incomplete JSON: ${text}`);
+
     res.json({ word: result.word, hint: result.hint });
   } catch (err) {
     console.error('Gemini error:', err.message);
-    // Return the error so the client can show it in dev, fall back gracefully in prod
     res.status(502).json({ error: err.message });
   }
 }
