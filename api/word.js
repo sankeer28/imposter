@@ -73,7 +73,9 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     const result = JSON.parse(match[0]);
     if (!result.word || !result.hint) throw new Error(`Incomplete JSON: ${text}`);
 
-    res.json({ word: result.word, hint: result.hint });
+    const output = { word: result.word, hint: result.hint };
+    console.log('Gemini output:', JSON.stringify(output));
+    res.json(output);
   } catch (err) {
     console.error('Gemini error:', err.message);
     res.status(502).json({ error: err.message });
