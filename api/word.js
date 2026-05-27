@@ -230,6 +230,17 @@ Rules for the imposter hint:
 Respond with ONLY valid JSON, no markdown, no explanation:
 {"word": "...", "hint": "..."}`;
 
+  // ── helpers ──────────────────────────────────────────────────
+  function parseResult(text) {
+    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
+    const match = stripped.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error(`No JSON in: ${text}`);
+    const result = JSON.parse(match[0]);
+    if (!result.word || !result.hint) throw new Error(`Incomplete JSON: ${text}`);
+    return { word: result.word, hint: result.hint };
+  }
+
+  // ── Tier 1: Gemini ───────────────────────────────────────────
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
@@ -242,51 +253,59 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         }),
       }
     );
-
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`Gemini ${response.status}: ${errText}`);
-    }
+    if (!response.ok) throw new Error(`Gemini ${response.status}`);
 
     const data = await response.json();
-
-    // Filter out thinking parts, keep only the real response
     const parts = data?.candidates?.[0]?.content?.parts || [];
-    const text = parts
-      .filter(p => !p.thought)
-      .map(p => p.text || '')
-      .join('')
-      .trim();
-
-    // Strip markdown code fences if present
-    const stripped = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-    const match = stripped.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error(`Unexpected format: ${text}`);
-
-    const result = JSON.parse(match[0]);
-    if (!result.word || !result.hint) throw new Error(`Incomplete JSON: ${text}`);
-
-    const output = { word: result.word, hint: result.hint };
+    const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
+    const output = parseResult(text);
     console.log('Gemini output:', JSON.stringify(output));
-    res.json(output);
+    return res.json(output);
   } catch (err) {
-    console.error('Gemini error:', err.message);
-
-    // Fallback: pick from per-category lists, avoiding used words
-    const pool = categories.length > 0
-      ? categories.flatMap(c => FALLBACK[c] || [])
-      : Object.values(FALLBACK).flat();
-
-    const available = pool.filter(
-      item => !usedWords.map(w => w.toLowerCase()).includes(item.word.toLowerCase())
-    );
-
-    // If everything's been used, reset and use the full pool
-    const pick = available.length > 0
-      ? available[Math.floor(Math.random() * available.length)]
-      : pool[Math.floor(Math.random() * pool.length)];
-
-    console.log('Fallback output:', JSON.stringify(pick));
-    res.json(pick);
+    console.error('Gemini failed, trying Groq:', err.message);
   }
+
+  // ── Tier 2: Groq (llama-3.3-70b-versatile, free tier) ───────
+  const groqKey = process.env.GROQ_API_KEY;
+  if (groqKey) {
+    try {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [{ role: 'user', content: prompt }],
+          temperature: 1.0,
+          max_tokens: 120,
+        }),
+      });
+      if (!response.ok) throw new Error(`Groq ${response.status}`);
+
+      const data = await response.json();
+      const text = data?.choices?.[0]?.message?.content?.trim() || '';
+      const output = parseResult(text);
+      console.log('Groq output:', JSON.stringify(output));
+      return res.json(output);
+    } catch (err) {
+      console.error('Groq failed, using hardcoded fallback:', err.message);
+    }
+  }
+
+  // ── Tier 3: hardcoded fallback ───────────────────────────────
+  const pool = categories.length > 0
+    ? categories.flatMap(c => FALLBACK[c] || [])
+    : Object.values(FALLBACK).flat();
+
+  const available = pool.filter(
+    item => !usedWords.map(w => w.toLowerCase()).includes(item.word.toLowerCase())
+  );
+  const pick = available.length > 0
+    ? available[Math.floor(Math.random() * available.length)]
+    : pool[Math.floor(Math.random() * pool.length)];
+
+  console.log('Hardcoded fallback output:', JSON.stringify(pick));
+  res.json(pick);
 }
