@@ -1368,6 +1368,8 @@ function App() {
 
   // apply theme — mutate the shared window.T so every component picks up new values
   window.applyTheme(tweaks.theme);
+  document.body.style.background = T.paper;
+  document.body.style.transition = 'background .4s ease';
 
   return (
     <>
