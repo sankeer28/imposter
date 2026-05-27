@@ -1,6 +1,6 @@
 // Test each AI tier independently
 // Usage: node test-tiers.js
-// Or test one tier: node test-tiers.js gemini | groq | openrouter
+// Or test one tier: node test-tiers.js gemini | groq | openrouter | ollama
 
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
@@ -18,6 +18,7 @@ const env = Object.fromEntries(
 const GEMINI_KEY    = env.GEMINI_API_KEY;
 const GROQ_KEY      = env.GROQ_API_KEY;
 const OR_KEY        = env.OPENROUTER_API_KEY;
+const OLLAMA_KEY    = env.OLLAMA_API_KEY;
 
 const prompt = `You are the word engine for a party deduction game called "Imposter Who?".
 
@@ -145,7 +146,31 @@ async function testOpenRouter() {
   return result;
 }
 
-const tiers = { gemini: testGemini, groq: testGroq, openrouter: testOpenRouter };
+async function testOllama() {
+  console.log('\n── Tier 4: Ollama Cloud (gemma3:4b) ─────────────────');
+  const t = Date.now();
+  const response = await fetch('https://ollama.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${OLLAMA_KEY}`,
+    },
+    body: JSON.stringify({
+      model: 'gemma3:4b-cloud',
+      messages: [{ role: 'user', content: prompt }],
+      stream: false,
+    }),
+  });
+  if (!response.ok) throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+  const data = await response.json();
+  const text = data?.choices?.[0]?.message?.content?.trim() || '';
+  console.log('  raw:', text.slice(0, 120).replace(/\n/g, ' '));
+  const result = parseResult(text);
+  console.log(`✓ ${JSON.stringify(result)}  (${Date.now() - t}ms)`);
+  return result;
+}
+
+const tiers = { gemini: testGemini, groq: testGroq, openrouter: testOpenRouter, ollama: testOllama };
 const arg = process.argv[2]?.toLowerCase();
 
 if (arg && tiers[arg]) {

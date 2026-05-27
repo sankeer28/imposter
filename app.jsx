@@ -711,7 +711,7 @@ function RevealScreen({ state, onBack }) {
 
       let word, hint;
 
-      for (let s = 1; s <= 3; s++) {
+      for (let s = 1; s <= 4; s++) {
         try {
           const res = await fetch('/api/word', {
             method: 'POST',
@@ -725,7 +725,7 @@ function RevealScreen({ state, onBack }) {
           break; // success
         } catch {
           if (cancelled) return;
-          if (s < 3) setLoadingMsg(`Server ${s} failed, trying Server ${s + 1}…`);
+          if (s < 4) setLoadingMsg(`Server ${s} failed, trying Server ${s + 1}…`);
         }
       }
 
@@ -918,8 +918,8 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
     setFlipped(false);
   };
 
-  // back-face color: black for imposter (dramatic), white for civilians
-  const backBg = isImposter ? T.ink : T.card;
+  // back-face: always dark so card colour can't leak who's the imposter
+  const backBg = T.ink;
 
   return (
     <div style={{

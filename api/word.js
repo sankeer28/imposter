@@ -340,6 +340,35 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     }
   }
 
+  // ── Server 4: Ollama Cloud (deepseek-v3.1:671b-cloud) ────────
+  if (!server || server === 4) {
+    const ollamaKey = process.env.OLLAMA_API_KEY;
+    try {
+      if (!ollamaKey) throw new Error('No Ollama key');
+      const response = await fetch('https://ollama.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ollamaKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gemma3:4b-cloud',
+          messages: [{ role: 'user', content: prompt }],
+          stream: false,
+        }),
+      });
+      if (!response.ok) throw new Error(`Ollama ${response.status}: ${await response.text()}`);
+      const data = await response.json();
+      const text = data?.choices?.[0]?.message?.content?.trim() || '';
+      const output = parseResult(text);
+      console.log('Server 4 (Ollama) output:', JSON.stringify(output));
+      return res.json(output);
+    } catch (err) {
+      console.error('Server 4 (Ollama) failed:', err.message);
+      if (server === 4) return res.status(502).json({ error: err.message });
+    }
+  }
+
   // ── Fallback: hardcoded list ──────────────────────────────────
   const pool = categories.length > 0
     ? categories.flatMap(c => FALLBACK[c] || [])
