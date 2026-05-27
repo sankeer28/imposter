@@ -348,13 +348,11 @@ function CategoriesSheet({ open, onClose, selected, setSelected, allCategories, 
     if (locked.includes(id)) return;
     setLocal(local.includes(id) ? local.filter(s => s !== id) : [...local, id]);
   };
-  const total = allCategories.filter(c => local.includes(c.id)).reduce((s, c) => s + c.count, 0);
-
   return (
     <Sheet
       open={open} onClose={onClose}
       title="Select Categories"
-      subtitle={`${local.length} selected · ${total.toLocaleString()} words in play`}
+      subtitle={`${local.length} selected`}
       confirmLabel="SAVE SELECTION"
       onConfirm={() => { setSelected(local); onClose(); }}
     >
@@ -405,9 +403,6 @@ function CategoriesSheet({ open, onClose, selected, setSelected, allCategories, 
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: 0.5, textTransform: 'uppercase' }}>
                   {c.label}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
-                  {c.count.toLocaleString()} words · {c.tag}
                 </div>
               </div>
               {isLocked ? (

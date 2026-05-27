@@ -285,17 +285,17 @@ function PlayersCardInline({ players, setPlayers }) {
 // Categories
 // ────────────────────────────────────────────────────────────
 const CATEGORIES = [
-  { id: 'objects', label: 'Everyday Things', count: 412, tag: 'free' },
-  { id: 'people',  label: 'Famous Names',    count: 280, tag: 'free' },
-  { id: 'food',    label: 'Food & Drink',    count: 196, tag: 'free' },
-  { id: 'places',  label: 'Places & Cities', count: 154, tag: 'free' },
-  { id: 'movies',  label: 'Movies & TV',     count: 320, tag: 'free' },
-  { id: 'animals', label: 'Animals',         count: 140, tag: 'free' },
-  { id: 'brands',  label: 'Brands & Logos',  count: 220, tag: 'free' },
-  { id: 'colors',  label: 'Colors & Shapes', count: 64,  tag: 'free' },
-  { id: 'sports',  label: 'Sports & Games',  count: 98,  tag: 'free' },
-  { id: 'jobs',    label: 'Jobs & Roles',    count: 87,  tag: 'free' },
-  { id: 'emotions',label: 'Emotions',        count: 72,  tag: 'free' },
+  { id: 'objects', label: 'Everyday Things' },
+  { id: 'people',  label: 'Famous Names'    },
+  { id: 'food',    label: 'Food & Drink'    },
+  { id: 'places',  label: 'Places & Cities' },
+  { id: 'movies',  label: 'Movies & TV'     },
+  { id: 'animals', label: 'Animals'         },
+  { id: 'brands',  label: 'Brands & Logos'  },
+  { id: 'colors',  label: 'Colors & Shapes' },
+  { id: 'sports',  label: 'Sports & Games'  },
+  { id: 'jobs',    label: 'Jobs & Roles'    },
+  { id: 'emotions',label: 'Emotions'        },
 ];
 const LOCKED_CATEGORIES = [];
 
@@ -324,16 +324,10 @@ function CategoriesCard({ selected, setSelected }) {
   const toggle = (id) => {
     setSelected(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
   };
-  const total = CATEGORIES.filter(c => selected.includes(c.id)).reduce((s, c) => s + c.count, 0);
 
   return (
     <div style={{ ...cardSx, padding: 18 }}>
-      <SectionLabel
-        kicker="03" title="CATEGORIES"
-        right={<span style={{
-          fontFamily: 'Inter, sans-serif', fontSize: 12, color: T.muted, fontWeight: 600,
-        }}>{total.toLocaleString()} words</span>}
-      />
+      <SectionLabel kicker="03" title="CATEGORIES" />
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
         {CATEGORIES.map(c => (
           <Pill key={c.id} active={selected.includes(c.id)} onClick={() => toggle(c.id)}>
@@ -343,9 +337,6 @@ function CategoriesCard({ selected, setSelected }) {
               marginRight: 7, verticalAlign: 'middle',
             }} />
             {c.label}
-            <span style={{ opacity: 0.5, marginLeft: 6, fontWeight: 400, fontSize: 12 }}>
-              {c.count}
-            </span>
           </Pill>
         ))}
       </div>
