@@ -651,22 +651,70 @@ const CARD_COLORS = [
 
 function RevealScreen({ state, onBack }) {
   const [step, setStep] = useState(0);
+  const [gameData, setGameData] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [shuffleSeed] = useState(() => Math.random());
 
-  const { word, imposterIndices, hintCategory } = useMemo(() => {
-    const pool = state.categories.length
-      ? state.categories.flatMap(c => SECRET_WORDS[c] || [])
-      : Object.values(SECRET_WORDS).flat();
-    const w = pool[Math.floor(shuffleSeed * pool.length)] || 'Mystery';
-    const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
-    const idxs = pickN(state.players.length, state.imposters, rng);
-    // hint: name of the first selected category (lowercased)
-    const cat = state.categories.length
-      ? CATEGORIES.find(c => c.id === state.categories[0])?.label.toLowerCase()
-      : 'a noun';
-    return { word: w, imposterIndices: idxs, hintCategory: cat };
-  }, [state, shuffleSeed]);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchWord() {
+      setLoading(true);
+      try {
+        const res = await fetch('/api/word', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ categories: state.categories }),
+        });
+        if (!res.ok) throw new Error('API error');
+        const { word, hint } = await res.json();
+        if (cancelled) return;
+        const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
+        const idxs = pickN(state.players.length, state.imposters, rng);
+        setGameData({ word, hintCategory: hint, imposterIndices: idxs });
+      } catch {
+        if (cancelled) return;
+        // Fallback to built-in words
+        const pool = state.categories.length
+          ? state.categories.flatMap(c => SECRET_WORDS[c] || [])
+          : Object.values(SECRET_WORDS).flat();
+        const w = pool[Math.floor(shuffleSeed * pool.length)] || 'Mystery';
+        const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
+        const idxs = pickN(state.players.length, state.imposters, rng);
+        const cat = state.categories.length
+          ? CATEGORIES.find(c => c.id === state.categories[0])?.label.toLowerCase()
+          : 'a noun';
+        setGameData({ word: w, hintCategory: cat, imposterIndices: idxs });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchWord();
+    return () => { cancelled = true; };
+  }, []);
 
+  if (loading) {
+    return (
+      <div style={{
+        height: '100%', minHeight: '100dvh', background: T.paper,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        gap: 18,
+      }}>
+        <div style={{ position: 'relative', width: 56, height: 56 }}>
+          <svg width="56" height="56" viewBox="0 0 56 56" style={{ animation: 'spin 1s linear infinite' }}>
+            <circle cx="28" cy="28" r="22" fill="none" stroke={T.paperDeep} strokeWidth="4"/>
+            <path d="M28 6 a22 22 0 0 1 22 22" fill="none" stroke={T.ink} strokeWidth="4" strokeLinecap="round"/>
+          </svg>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+        <div style={{
+          fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: 1.5,
+          color: T.ink, textTransform: 'uppercase',
+        }}>Picking a word…</div>
+      </div>
+    );
+  }
+
+  const { word, hintCategory, imposterIndices } = gameData;
   const total = state.players.length;
   if (step >= total) {
     return <DiscussionScreen state={state} word={word} onBack={onBack} imposterIndices={imposterIndices} />;
