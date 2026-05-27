@@ -18,16 +18,20 @@ Rules for the word:
 - Avoid overly abstract words
 
 Rules for the imposter hint:
-- The imposter does NOT know the word — give them one subtle physical or behavioral clue about the word
-- The hint must be a single evocative word or very short phrase (1–3 words max)
-- It should hint at a sensory property, shape, action, or association — NOT the category name
-- Examples:
-  * cashew → curved
-  * chair → legs
-  * ranch → dip
-  * guitar → strings
+- The imposter does NOT know the word — give them a subtle, indirect clue they can use to bluff
+- The hint must be 1–3 words max
+- It should be a secondary or non-obvious association — NOT the first thing anyone thinks of
+- Avoid direct sensory giveaways (e.g. don't say "crunchy" for popcorn, "cold" for ice cream, "red" for apple)
+- Prefer shape, motion, context, or a less obvious physical property
+- The hint alone should NOT let someone guess the word immediately
+- Good examples:
+  * popcorn → kernel (not "crunchy" — too obvious)
+  * cashew → curved (shape, indirect)
+  * chair → legs (shared with tables, not a giveaway)
+  * ranch → dip (action, not "white" or "creamy")
+  * guitar → strings (but not "music" — too broad is fine, too specific is bad)
   * balloon → floats
-  * ladder → rungs
+  * ice cream → scooped (not "cold" or "sweet")
 - Never reveal the category name as the hint
 
 Respond with ONLY valid JSON, no markdown, no explanation:
@@ -41,7 +45,7 @@ Respond with ONLY valid JSON, no markdown, no explanation:
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 1.0, maxOutputTokens: 8192 },
+          generationConfig: { temperature: 1.0, maxOutputTokens: 16000 },
         }),
       }
     );
