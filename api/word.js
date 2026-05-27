@@ -212,7 +212,7 @@ Rules for the word:
 
 Rules for the imposter hint:
 - The imposter does NOT know the word — give them a clue they can actually use to sound convincing in conversation
-- The hint must be 1–3 words max
+- The hint must be a SINGLE word only — no phrases, no "It's ...", no punctuation
 - It should be intuitive and usable — something the imposter can naturally work into sentences
 - Not too obvious (don't give away the word) but not too cryptic
 - Sweet spot: a well-known property of the word that also applies to a few other things

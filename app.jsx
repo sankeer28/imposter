@@ -950,7 +950,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
                     fontFamily: 'Inter, sans-serif', fontSize: 14,
                   }}>
                     <span style={{ color: T.muted, letterSpacing: 1.2, fontSize: 10, fontWeight: 700 }}>HINT</span>
-                    <div style={{ marginTop: 4, color: T.paper }}>It’s {hint}.</div>
+                    <div style={{ marginTop: 4, color: T.paper }}>{hint}</div>
                   </div>
                 )}
               </div>
