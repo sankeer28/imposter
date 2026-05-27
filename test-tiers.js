@@ -69,7 +69,7 @@ function parseResult(text) {
 }
 
 async function testGemini() {
-  console.log('\n── Tier 1: Gemini 2.5 Flash ─────────────────────');
+  console.log('\n── Tier 4: Gemini 2.0 Flash (last AI resort) ────');
   const t = Date.now();
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_KEY}`,
@@ -93,7 +93,7 @@ async function testGemini() {
 }
 
 async function testGroq() {
-  console.log('\n── Tier 2: Groq qwen3-32b (thinking) ────────────');
+  console.log('\n── Tier 1: Groq qwen3-32b (thinking) ────────────');
   const t = Date.now();
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -123,7 +123,7 @@ async function testGroq() {
 }
 
 async function testOpenRouter() {
-  console.log('\n── Tier 3: OpenRouter gpt-oss-120b:free ──────────');
+  console.log('\n── Tier 3: OpenRouter gpt-oss-120b:free ─────────');
   const t = Date.now();
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -147,7 +147,7 @@ async function testOpenRouter() {
 }
 
 async function testOllama() {
-  console.log('\n── Tier 4: Ollama Cloud (gemma3:4b) ─────────────────');
+  console.log('\n── Tier 2: Ollama Cloud (gemma3:4b) ─────────────');
   const t = Date.now();
   const response = await fetch('https://ollama.com/v1/chat/completions', {
     method: 'POST',

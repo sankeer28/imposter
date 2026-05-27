@@ -603,36 +603,8 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     return { word: result.word, hint: result.hint };
   }
 
-  // ── Server 1: Gemini ─────────────────────────────────────────
+  // ── Server 1: Groq qwen3-32b (14,400 req/day — try first) ──────
   if (!server || server === 1) {
-    try {
-      if (!apiKey) throw new Error('No Gemini key');
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 1.0, maxOutputTokens: 8192 },
-          }),
-        }
-      );
-      if (!response.ok) throw new Error(`Gemini ${response.status}`);
-      const data = await response.json();
-      const parts = data?.candidates?.[0]?.content?.parts || [];
-      const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
-      const output = parseResult(text);
-      console.log('Server 1 (Gemini) output:', JSON.stringify(output));
-      return res.json(output);
-    } catch (err) {
-      console.error('Server 1 (Gemini) failed:', err.message);
-      if (server === 1) return res.status(502).json({ error: err.message });
-    }
-  }
-
-  // ── Server 2: Groq qwen3-32b ──────────────────────────────────
-  if (!server || server === 2) {
     const groqKey = process.env.GROQ_API_KEY;
     try {
       if (!groqKey) throw new Error('No Groq key');
@@ -658,15 +630,44 @@ Respond with ONLY valid JSON, no markdown, no explanation:
       const data = await response.json();
       const text = data?.choices?.[0]?.message?.content?.trim() || '';
       const output = parseResult(text);
-      console.log('Server 2 (Groq) output:', JSON.stringify(output));
+      console.log('Server 1 (Groq) output:', JSON.stringify(output));
       return res.json(output);
     } catch (err) {
-      console.error('Server 2 (Groq) failed:', err.message);
+      console.error('Server 1 (Groq) failed:', err.message);
+      if (server === 1) return res.status(502).json({ error: err.message });
+    }
+  }
+
+  // ── Server 2: Ollama Cloud gemma3:4b (free, fast) ────────────
+  if (!server || server === 2) {
+    const ollamaKey = process.env.OLLAMA_API_KEY;
+    try {
+      if (!ollamaKey) throw new Error('No Ollama key');
+      const response = await fetch('https://ollama.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ollamaKey}`,
+        },
+        body: JSON.stringify({
+          model: 'gemma3:4b-cloud',
+          messages: [{ role: 'user', content: prompt }],
+          stream: false,
+        }),
+      });
+      if (!response.ok) throw new Error(`Ollama ${response.status}: ${await response.text()}`);
+      const data = await response.json();
+      const text = data?.choices?.[0]?.message?.content?.trim() || '';
+      const output = parseResult(text);
+      console.log('Server 2 (Ollama) output:', JSON.stringify(output));
+      return res.json(output);
+    } catch (err) {
+      console.error('Server 2 (Ollama) failed:', err.message);
       if (server === 2) return res.status(502).json({ error: err.message });
     }
   }
 
-  // ── Server 3: OpenRouter gpt-oss-120b ────────────────────────
+  // ── Server 3: OpenRouter gpt-oss-120b (free, slower) ───────────
   if (!server || server === 3) {
     const orKey = process.env.OPENROUTER_API_KEY;
     try {
@@ -695,31 +696,30 @@ Respond with ONLY valid JSON, no markdown, no explanation:
     }
   }
 
-  // ── Server 4: Ollama Cloud (deepseek-v3.1:671b-cloud) ────────
+  // ── Server 4: Gemini 2.0 Flash (1,500 req/day — last AI resort) ─
   if (!server || server === 4) {
-    const ollamaKey = process.env.OLLAMA_API_KEY;
     try {
-      if (!ollamaKey) throw new Error('No Ollama key');
-      const response = await fetch('https://ollama.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${ollamaKey}`,
-        },
-        body: JSON.stringify({
-          model: 'gemma3:4b-cloud',
-          messages: [{ role: 'user', content: prompt }],
-          stream: false,
-        }),
-      });
-      if (!response.ok) throw new Error(`Ollama ${response.status}: ${await response.text()}`);
+      if (!apiKey) throw new Error('No Gemini key');
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 1.0, maxOutputTokens: 8192 },
+          }),
+        }
+      );
+      if (!response.ok) throw new Error(`Gemini ${response.status}`);
       const data = await response.json();
-      const text = data?.choices?.[0]?.message?.content?.trim() || '';
+      const parts = data?.candidates?.[0]?.content?.parts || [];
+      const text = parts.filter(p => !p.thought).map(p => p.text || '').join('').trim();
       const output = parseResult(text);
-      console.log('Server 4 (Ollama) output:', JSON.stringify(output));
+      console.log('Server 4 (Gemini) output:', JSON.stringify(output));
       return res.json(output);
     } catch (err) {
-      console.error('Server 4 (Ollama) failed:', err.message);
+      console.error('Server 4 (Gemini) failed:', err.message);
       if (server === 4) return res.status(502).json({ error: err.message });
     }
   }
