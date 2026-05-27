@@ -640,6 +640,42 @@ const CARD_COLORS = [
   '#E8A33A', // marigold
 ];
 
+// Fair imposter selection — rotates through all players before repeating anyone.
+// Uses localStorage key 'imposter_cycle' to track who's had a turn.
+function fairImposters(players, count, seed) {
+  // Load cycle, filtering to only current players
+  const stored = JSON.parse(localStorage.getItem('imposter_cycle') || '[]');
+  const cycle = stored.filter(name => players.includes(name));
+
+  // If everyone has been imposter at least once, start a fresh cycle
+  const allDone = players.every(p => cycle.includes(p));
+  const activeCycle = allDone ? [] : cycle;
+
+  // Split into those who haven't had a turn yet vs those who have
+  const indices = players.map((_, i) => i);
+  const fresh = indices.filter(i => !activeCycle.includes(players[i]));
+  const used  = indices.filter(i =>  activeCycle.includes(players[i]));
+
+  // Seeded shuffle so the result is deterministic per game
+  function seededShuffle(arr) {
+    const a = [...arr];
+    const rng = mulberry32(Math.floor(seed * 1e9) ^ arr.length);
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  const ordered = [...seededShuffle(fresh), ...seededShuffle(used)];
+  const chosen  = ordered.slice(0, count).sort((a, b) => a - b);
+
+  // Persist the updated cycle
+  const newCycle = [...new Set([...activeCycle, ...chosen.map(i => players[i])])];
+  localStorage.setItem('imposter_cycle', JSON.stringify(newCycle));
+  return chosen;
+}
+
 function RevealScreen({ state, onBack }) {
   const [step, setStep] = useState(0);
   const [gameData, setGameData] = useState(null);
@@ -665,8 +701,7 @@ function RevealScreen({ state, onBack }) {
         // Save word to used list (keep last 200 to avoid infinite growth)
         const updated = [...new Set([...usedWords, word])].slice(-200);
         localStorage.setItem('imposter_used_words', JSON.stringify(updated));
-        const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
-        const idxs = pickN(state.players.length, state.imposters, rng);
+        const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
         setGameData({ word, hintCategory: hint, imposterIndices: idxs });
       } catch {
         if (cancelled) return;
@@ -679,8 +714,7 @@ function RevealScreen({ state, onBack }) {
         const w = candidates[Math.floor(shuffleSeed * candidates.length)] || 'Mystery';
         const updated = [...new Set([...usedWords, w])].slice(-200);
         localStorage.setItem('imposter_used_words', JSON.stringify(updated));
-        const rng = mulberry32(Math.floor(shuffleSeed * 1e9));
-        const idxs = pickN(state.players.length, state.imposters, rng);
+        const idxs = fairImposters(state.players, state.imposters, shuffleSeed);
         const cat = state.categories.length
           ? CATEGORIES.find(c => c.id === state.categories[0])?.label.toLowerCase()
           : 'a noun';
@@ -1048,8 +1082,18 @@ function pickN(n, k, rng) {
 function DiscussionScreen({ state, word, imposterIndices, onBack }) {
   const [revealed, setRevealed] = useState(false);
   const [confirmNew, setConfirmNew] = useState(false);
-  // Pick a random starter once
-  const [starter] = useState(() => state.players[Math.floor(Math.random() * state.players.length)]);
+
+  // Starter must be a non-imposter, chosen at random
+  const [starterIdx] = useState(() => {
+    const nonImposters = state.players.map((_, i) => i).filter(i => !imposterIndices.includes(i));
+    const pool = nonImposters.length > 0 ? nonImposters : state.players.map((_, i) => i);
+    return pool[Math.floor(Math.random() * pool.length)];
+  });
+
+  // Circular speaking order starting from starterIdx
+  const speakingOrder = state.players.map((_, i) =>
+    state.players[(starterIdx + i) % state.players.length]
+  );
 
   return (
     <div style={{
@@ -1087,14 +1131,52 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
           </h1>
           <div style={{
             fontFamily: 'Inter, sans-serif', fontSize: 18, color: T.inkSoft,
-            lineHeight: 1.4,
+            lineHeight: 1.4, marginBottom: 20,
           }}>
             <span style={{
               background: T.lime, padding: '2px 10px', borderRadius: 6,
               fontWeight: 700, color: T.ink,
               boxDecorationBreak: 'clone', WebkitBoxDecorationBreak: 'clone',
-            }}>{starter}</span>{' '}
+            }}>{speakingOrder[0]}</span>{' '}
             starts the conversation!
+          </div>
+
+          {/* Circular speaking order */}
+          <div style={{
+            background: T.card, border: '1px solid rgba(0,0,0,0.05)',
+            borderRadius: 18, padding: '14px 18px',
+            boxShadow: '0 2px 6px rgba(20,18,12,0.08)',
+          }}>
+            <div style={{
+              fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: 1.8,
+              fontWeight: 700, color: T.muted, marginBottom: 10,
+            }}>SPEAKING ORDER</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {speakingOrder.map((name, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: 999, flexShrink: 0,
+                    background: i === 0 ? T.lime : T.paperDeep,
+                    border: '1px solid rgba(0,0,0,0.05)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: 'Archivo Black, sans-serif', fontSize: 11, color: T.ink,
+                  }}>{i + 1}</div>
+                  <div style={{
+                    fontFamily: 'Inter, sans-serif', fontWeight: i === 0 ? 700 : 500,
+                    fontSize: 15, color: i === 0 ? T.ink : T.inkSoft,
+                  }}>{name}</div>
+                  {i === 0 && (
+                    <div style={{
+                      marginLeft: 'auto', fontFamily: 'Archivo Black, sans-serif',
+                      fontSize: 10, letterSpacing: 1, color: T.lime,
+                      background: T.ink, padding: '2px 7px', borderRadius: 4,
+                    }}>STARTS</div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 22 }}>
