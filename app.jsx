@@ -1003,11 +1003,11 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
             }}>
               <div style={{
                 fontFamily: 'Inter, sans-serif', fontSize: 12, letterSpacing: 2,
-                color: T.muted, fontWeight: 700, marginBottom: 16,
+                color: T.paper, opacity: 0.5, fontWeight: 700, marginBottom: 16,
               }}>THE SECRET WORD</div>
               <div style={{
                 fontFamily: 'Archivo Black, sans-serif',
-                color: T.ink, textTransform: 'uppercase', letterSpacing: -0.5,
+                color: T.paper, textTransform: 'uppercase', letterSpacing: -0.5,
               }}>
                 <AutoFitText max={56} min={22}>{word}</AutoFitText>
               </div>
@@ -1016,7 +1016,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
           <div style={{
             position: 'absolute', bottom: 22, left: 0, right: 0, textAlign: 'center',
             fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: 1.6, fontWeight: 700,
-            color: isImposter ? T.muted : T.muted,
+            color: T.paper, opacity: 0.35,
           }}>RELEASE TO HIDE</div>
         </CardFace>
       </div>

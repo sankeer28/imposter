@@ -13,10 +13,12 @@ function Sheet({ open, onClose, title, subtitle, children, confirmLabel = 'CONFI
   useEffectS(() => {
     if (open) {
       setMounted(true);
-      requestAnimationFrame(() => setVisible(true));
+      // Double-RAF: first frame paints the sheet at translateY(100%),
+      // second frame triggers the transition so it actually slides up.
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
     } else if (mounted) {
       setVisible(false);
-      const t = setTimeout(() => setMounted(false), 260);
+      const t = setTimeout(() => setMounted(false), 300);
       return () => clearTimeout(t);
     }
   }, [open]);
@@ -34,7 +36,7 @@ function Sheet({ open, onClose, title, subtitle, children, confirmLabel = 'CONFI
       {/* backdrop */}
       <div onClick={onClose} style={{
         position: 'absolute', inset: 0, background: 'rgba(20,18,12,0.5)',
-        opacity: visible ? 1 : 0, transition: 'opacity .22s ease',
+        opacity: visible ? 1 : 0, transition: 'opacity .28s ease',
       }} />
       {/* sheet */}
       <div style={{
@@ -43,7 +45,7 @@ function Sheet({ open, onClose, title, subtitle, children, confirmLabel = 'CONFI
         border: '1px solid rgba(0,0,0,0.05)', borderBottom: 'none',
         maxHeight: '88%', display: 'flex', flexDirection: 'column',
         transform: visible ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform .26s cubic-bezier(.2,.8,.2,1)',
+        transition: 'transform .32s cubic-bezier(.22,.9,.26,1)',
         boxShadow: '0 -20px 40px -10px rgba(20,18,12,0.18)',
       }}>
         {/* grab handle */}
