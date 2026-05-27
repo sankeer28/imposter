@@ -187,7 +187,7 @@ function Chevron() {
 // ────────────────────────────────────────────────────────────
 // Players card (legacy inline — no longer used)
 // ────────────────────────────────────────────────────────────
-const PLAYER_FALLBACKS = ['Avery','Sam','Mira','Noor','Theo','Jules','Reza','Cleo','Mika','Pax','Iris','Owen'];
+const PLAYER_FALLBACKS = Array.from({ length: 20 }, (_, i) => `Player ${i + 1}`);
 
 function PlayersCardInline({ players, setPlayers }) {
   const [editing, setEditing] = useState(null);
@@ -1357,7 +1357,7 @@ function App() {
   const [screen, setScreen] = useState('setup');
   const [sheet, setSheet] = useState(null);
   const [state, setState] = useState({
-    players: ['Avery','Sam','Mira','Noor'],
+    players: ['Player 1','Player 2','Player 3','Player 4'],
     categories: [],
     imposters: 1,
     timeOn: false,
