@@ -1440,21 +1440,15 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 function App() {
-  // Seed useTweaks with any cached theme so the first render is correct
-  const [tweaks, _setTweak] = useTweaks({
+  const [tweaks, setTweaks] = React.useState({
     ...TWEAK_DEFAULTS,
     theme: localStorage.getItem('imposter_theme') || TWEAK_DEFAULTS.theme,
   });
 
-  // Wrap setTweak so theme changes are always mirrored to localStorage
-  const setTweak = React.useCallback((keyOrEdits, val) => {
-    _setTweak(keyOrEdits, val);
-    if (typeof keyOrEdits === 'string' && keyOrEdits === 'theme') {
-      localStorage.setItem('imposter_theme', val);
-    } else if (keyOrEdits && typeof keyOrEdits === 'object' && keyOrEdits.theme) {
-      localStorage.setItem('imposter_theme', keyOrEdits.theme);
-    }
-  }, [_setTweak]);
+  const setTweak = React.useCallback((key, val) => {
+    setTweaks(prev => ({ ...prev, [key]: val }));
+    if (key === 'theme') localStorage.setItem('imposter_theme', val);
+  }, []);
 
   const [screen, setScreen] = useState('setup');
   const [sheet, setSheet] = useState(null);
@@ -1538,24 +1532,6 @@ function App() {
 
       <IOSInstallBanner />
 
-      <TweaksPanel title="Tweaks">
-        <TweakSection title="Theme">
-          <TweakRadio
-            label="Palette"
-            value={tweaks.theme}
-            onChange={v => setTweak('theme', v)}
-            options={[
-              { value: 'marigold', label: 'Marigold' },
-              { value: 'tokyo', label: 'Tokyo' },
-              { value: 'afterdark', label: 'Dark' },
-            ]}
-          />
-        </TweakSection>
-        <TweakSection title="Quick jump">
-          <TweakButton onClick={() => setScreen('setup')}>← Setup screen</TweakButton>
-          <TweakButton onClick={() => setScreen('reveal')}>Reveal flow →</TweakButton>
-        </TweakSection>
-      </TweaksPanel>
     </>
   );
 }
