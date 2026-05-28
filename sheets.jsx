@@ -126,6 +126,7 @@ function DragList({ items, renderItem, onReorder, rowHeight = 60, gap = 8 }) {
   const onPointerUp = (e) => {
     if (dragIdx == null) return;
     if (hoverIdx !== dragIdx) {
+      haptic.medium();
       const next = [...items];
       const [moved] = next.splice(dragIdx, 1);
       next.splice(hoverIdx, 0, moved);

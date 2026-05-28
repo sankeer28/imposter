@@ -938,6 +938,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
   const end = () => {
     if (!downRef.current) return;
     downRef.current = false;
+    haptic.light();
     setFlipped(false);
   };
 
@@ -1213,7 +1214,7 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
               fontFamily: 'Archivo Black, sans-serif', fontSize: 16, letterSpacing: 1.2,
             }}>REVEAL IMPOSTER & WORD</button>
 
-            <button onClick={() => setConfirmNew(true)} style={{
+            <button onClick={() => { haptic.medium(); setConfirmNew(true); }} style={{
               background: 'transparent', border: 'none', cursor: 'pointer',
               fontFamily: 'Inter, sans-serif', fontSize: 15, fontWeight: 600,
               color: T.muted, textDecoration: 'underline', textUnderlineOffset: 4,
@@ -1268,7 +1269,7 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
           </div>
 
           <div style={{ marginTop: 'auto', paddingTop: 30, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }}>
-            <button onClick={() => setConfirmNew(true)} style={{
+            <button onClick={() => { haptic.medium(); setConfirmNew(true); }} style={{
               width: '100%', height: 64, borderRadius: 999,
               background: T.lime, color: T.ink,
               border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer',
@@ -1352,13 +1353,13 @@ function ConfirmDialog({ open, title, body, confirmLabel = 'CONFIRM', cancelLabe
           lineHeight: 1.5, marginTop: 10,
         }}>{body}</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 22 }}>
-          <button onClick={onConfirm} style={{
+          <button onClick={() => { haptic.heavy(); onConfirm(); }} style={{
             height: 52, borderRadius: 14, border: '1px solid rgba(0,0,0,0.05)',
             background: T.lime, color: T.ink, cursor: 'pointer',
             fontFamily: 'Archivo Black, sans-serif', fontSize: 14, letterSpacing: 1.3,
             boxShadow: '0 8px 20px rgba(20,18,12,0.10), 0 2px 6px rgba(20,18,12,0.05)',
           }}>{confirmLabel}</button>
-          <button onClick={onCancel} style={{
+          <button onClick={() => { haptic.light(); onCancel(); }} style={{
             height: 46, borderRadius: 14, border: 'none', background: 'transparent',
             color: T.muted, cursor: 'pointer',
             fontFamily: 'Inter, sans-serif', fontSize: 14, fontWeight: 600,

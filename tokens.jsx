@@ -59,13 +59,14 @@ const cardSx = {
 // Toggle — wraps react-switch (loaded via CDN as window.ReactSwitch).
 // Keeps the same { on, onChange, accent } API so no call sites need changing.
 function Toggle({ on, onChange, accent }) {
+  const handle = (v) => { haptic.light(); onChange(v); };
   if (typeof ReactSwitch !== 'undefined') {
     // span[lineHeight:0] strips text-baseline offset that inline-block inherits
     return (
       <span style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
         <ReactSwitch
           checked={!!on}
-          onChange={onChange}
+          onChange={handle}
           onColor={accent || T.lime}
           offColor={T.paperDeep}
           onHandleColor={T.ink}
@@ -84,7 +85,7 @@ function Toggle({ on, onChange, accent }) {
   // Fallback if CDN fails to load
   const ACCENT = accent || T.lime;
   return (
-    <button onClick={() => onChange(!on)} style={{
+    <button onClick={() => handle(!on)} style={{
       width: 52, height: 30, borderRadius: 999,
       border: '1px solid rgba(0,0,0,0.05)',
       background: on ? ACCENT : T.paperDeep,
