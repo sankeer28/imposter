@@ -1,8 +1,7 @@
 # Imposter Who?
 
-A party deduction game for 3–20 players. One secret word. One liar at the table. Ask, answer, accuse — and figure out who doesn't belong.
+A party game for 3–20 players. One secret word. One liar. Figure out the liar.
 
----
 
 ## Screenshots
 
@@ -30,20 +29,6 @@ A party deduction game for 3–20 players. One secret word. One liar at the tabl
 |--------------------|-------|-----------|
 | ![Marigold](screenshots/02-setup.png) | ![Tokyo](screenshots/13-theme-tokyo.png) | ![After Dark](screenshots/14-theme-afterdark.png) |
 
----
-
-## How to Play
-
-1. **Gather your group** — pass the phone around the table, one player at a time.
-2. **Each player holds to reveal their card** — everyone sees the secret word except the imposter, who sees `IMPOSTER` and a fuzzy hint clue.
-3. **Go around the table** — each player says one word or phrase related to the secret word. The imposter must bluff.
-4. **Discuss** — talk, question each other, look for the person whose clue felt slightly off.
-5. **Vote** — agree on who you think the imposter is.
-6. **Reveal** — tap **Reveal Imposter & Word** to see if you were right.
-
-The imposter wins if they survive the vote without being identified. Everyone else wins if they correctly identify the imposter.
-
----
 
 ## Features
 
@@ -76,4 +61,4 @@ The game tracks who has been imposter and rotates through all players before rep
 
 ### Per-Player Word History
 
-Seen words are stored per player. Before each round the app sends the union of all current players' histories to the AI so the same word is never repeated — even across partial group changes.
+Seen words are stored per player in cache. Before each round the app sends the union of all current players' histories to the AI so the same word is never repeated — even across partial group changes.
