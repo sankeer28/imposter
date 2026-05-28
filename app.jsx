@@ -827,8 +827,11 @@ function RevealScreen({ state, onBack }) {
         </button>
       </div>
 
-      {/* player card */}
-      <div style={{ flex: 1, padding: '0 18px', display: 'flex' }}>
+      {/* player card — key forces remount + entrance animation on every step */}
+      <div key={step} style={{
+        flex: 1, padding: '0 18px', display: 'flex',
+        animation: 'cardEnter .5s cubic-bezier(.22,.9,.26,1) both',
+      }}>
         <PlayerCard
           playerName={playerName}
           step={step}
@@ -923,7 +926,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
 
   return (
     <div style={{
-      flex: 1, perspective: 1400, userSelect: 'none', touchAction: 'none',
+      flex: 1, perspective: 900, userSelect: 'none', touchAction: 'none',
       animation: flipped ? 'none' : 'cardBreathe 2.6s ease-in-out infinite',
     }}
       onPointerDown={start}
@@ -934,7 +937,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
       <div style={{
         position: 'relative', width: '100%', height: '100%',
         transformStyle: 'preserve-3d',
-        transition: 'transform .55s cubic-bezier(.6,.05,.3,1)',
+        transition: 'transform .44s cubic-bezier(.4,0,.2,1)',
         transform: flipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
         cursor: 'pointer',
       }}>
@@ -1428,6 +1431,16 @@ function App() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
   const [screen, setScreen] = useState('setup');
   const [sheet, setSheet] = useState(null);
+
+  // Fade out the HTML loader once React is ready
+  useEffect(() => {
+    const el = document.getElementById('app-loader');
+    if (!el) return;
+    el.style.transition = 'opacity 0.32s ease';
+    el.style.opacity = '0';
+    const t = setTimeout(() => el.remove(), 340);
+    return () => clearTimeout(t);
+  }, []);
   const [state, setState] = useState(() => {
     const savedPlayers = JSON.parse(localStorage.getItem('imposter_players') || 'null');
     return {

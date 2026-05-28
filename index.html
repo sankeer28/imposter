@@ -29,7 +29,38 @@
     .phone *::-webkit-scrollbar { width: 0; height: 0; display: none; }
     .phone * { scrollbar-width: none; }
 
-    /* Subtle idle breathing for the reveal card */
+    /* ── App loader ─────────────────────────────────── */
+    #app-loader {
+      position: fixed; inset: 0; z-index: 99999;
+      background: #EFE8D8;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      pointer-events: none;
+      will-change: opacity;
+    }
+    .loader-line {
+      font-family: 'Archivo Black', 'Arial Black', sans-serif;
+      font-size: clamp(52px, 17vw, 78px);
+      line-height: 0.87; letter-spacing: -2.5px;
+      color: #15161B; text-transform: uppercase;
+      animation: loaderUp .38s ease both;
+    }
+    .loader-line:nth-child(2) { animation-delay: .09s; }
+    @keyframes loaderUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card entrance — spring bounce up ───────────── */
+    @keyframes cardEnter {
+      0%   { transform: translateY(68px) scale(0.94); opacity: 0; }
+      55%  { transform: translateY(-9px) scale(1.016); opacity: 1; }
+      75%  { transform: translateY(4px)  scale(0.997); }
+      90%  { transform: translateY(-2px) scale(1.002); }
+      100% { transform: translateY(0)   scale(1);     opacity: 1; }
+    }
+
+    /* ── Subtle idle breathing for the reveal card ─── */
     @keyframes cardBreathe {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.012); }
@@ -42,6 +73,12 @@
   <script src="https://unpkg.com/react-switch@6.0.0/dist/react-switch.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
+  <!-- Loader shown before React hydrates -->
+  <div id="app-loader" aria-hidden="true">
+    <div class="loader-line">IMPOST<span style="display:inline-block;transform:rotate(-8deg) translateY(-3px);color:#FF4A3D">R</span></div>
+    <div class="loader-line">WHO<span style="color:#FF4A3D">?</span></div>
+  </div>
+
   <div id="root"></div>
   <script type="text/babel" src="ios-frame.jsx"></script>
   <script type="text/babel" src="tweaks-panel.jsx"></script>
