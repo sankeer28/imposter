@@ -1473,7 +1473,7 @@ function App() {
     const savedPlayers = JSON.parse(localStorage.getItem('imposter_players') || 'null');
     return {
       players: savedPlayers || ['Player 1','Player 2','Player 3','Player 4'],
-      categories: [],
+      categories: ['objects'],
       imposters: 1,
       timeOn: false,
       seconds: 120,
