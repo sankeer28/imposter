@@ -96,5 +96,10 @@
   <script type="text/babel" src="tokens.jsx"></script>
   <script type="text/babel" src="sheets.jsx"></script>
   <script type="text/babel" src="app.jsx"></script>
+  <!-- tactus: haptic feedback (iOS checkbox trick + Android vibrate) -->
+  <script type="module">
+    import { triggerHaptic } from 'https://cdn.jsdelivr.net/npm/tactus@0.0.2/dist/index.mjs';
+    window.triggerHaptic = triggerHaptic;
+  </script>
 </body>
 </html>

@@ -4,6 +4,9 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 
+// Haptic feedback — tactus loaded via module script; no-ops on unsupported platforms
+const haptic = (ms = 40) => window.triggerHaptic?.(ms);
+
 // Tokens (T, cardSx, Toggle) come from tokens.jsx → window.
 
 // ────────────────────────────────────────────────────────────
@@ -60,6 +63,7 @@ const THEME_LABELS = { marigold: 'Marigold', tokyo: 'Tokyo', afterdark: 'Dark' }
 
 function PosterHeader({ onHelp, theme, onTheme }) {
   const next = () => {
+    haptic(20);
     const i = THEME_ORDER.indexOf(theme);
     onTheme(THEME_ORDER[(i + 1) % THEME_ORDER.length]);
   };
@@ -334,6 +338,7 @@ function CategoryIcon({ id, size = 22, color }) {
 
 function CategoriesCard({ selected, setSelected }) {
   const toggle = (id) => {
+    haptic(20);
     setSelected(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
   };
 
@@ -362,6 +367,7 @@ function CategoriesCard({ selected, setSelected }) {
 function ImpostersCard({ imposters, setImposters, playerCount }) {
   const max = Math.max(1, Math.floor(playerCount / 2));
   const stepper = (delta) => {
+    haptic(20);
     const n = Math.min(max, Math.max(1, imposters + delta));
     setImposters(n);
   };
@@ -599,7 +605,7 @@ function StartBar({ state, onStart }) {
       background: `linear-gradient(to top, ${T.paper} 60%, rgba(239,232,216,0))`,
       pointerEvents: 'none',
     }}>
-      <button onClick={onStart} disabled={disabled} style={{
+      <button onClick={() => { haptic(50); onStart(); }} disabled={disabled} style={{
         pointerEvents: 'auto',
         width: '100%', height: 64, borderRadius: 20,
         border: '1px solid rgba(0,0,0,0.05)',
@@ -813,6 +819,7 @@ function RevealScreen({ state, onBack }) {
   const cardColor = CARD_COLORS[step % CARD_COLORS.length];
 
   const next = () => {
+    haptic(40);
     setStep(step + 1);
   };
 
@@ -925,6 +932,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     }
     downRef.current = true;
+    haptic(30);
     setFlipped(true);
   };
   const end = () => {
@@ -1197,7 +1205,7 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
           </div>
 
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <button onClick={() => setRevealed(true)} style={{
+            <button onClick={() => { haptic(80); setRevealed(true); }} style={{
               width: '100%', height: 64, borderRadius: 999,
               background: T.card, color: T.ink,
               border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer',
