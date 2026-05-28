@@ -45,7 +45,7 @@
       color: var(--loader-fg, #15161B); text-transform: uppercase;
       animation: loaderUp .38s ease both;
     }
-    .loader-line:nth-child(2) { animation-delay: .09s; }
+    /* delay on 2nd line set via inline style for reliability */
     @keyframes loaderUp {
       from { opacity: 0; transform: translateY(16px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -88,7 +88,7 @@
   <!-- Loader shown before React hydrates -->
   <div id="app-loader" aria-hidden="true">
     <div class="loader-line">IMPOST<span style="display:inline-block;transform:rotate(-8deg) translateY(-3px);color:#FF4A3D">R</span></div>
-    <div class="loader-line">WHO<span style="color:#FF4A3D">?</span></div>
+    <div class="loader-line" style="animation-delay:.22s">WHO<span style="color:#FF4A3D">?</span></div>
   </div>
 
   <div id="root"></div>
