@@ -60,22 +60,25 @@ const cardSx = {
 // Keeps the same { on, onChange, accent } API so no call sites need changing.
 function Toggle({ on, onChange, accent }) {
   if (typeof ReactSwitch !== 'undefined') {
+    // span[lineHeight:0] strips text-baseline offset that inline-block inherits
     return (
-      <ReactSwitch
-        checked={!!on}
-        onChange={onChange}
-        onColor={accent || T.lime}
-        offColor={T.paperDeep}
-        onHandleColor={T.ink}
-        offHandleColor={T.ink}
-        handleDiameter={22}
-        uncheckedIcon={false}
-        checkedIcon={false}
-        height={30}
-        width={52}
-        boxShadow="0px 1px 5px rgba(0,0,0,0.22)"
-        activeBoxShadow="none"
-      />
+      <span style={{ display: 'flex', alignItems: 'center', lineHeight: 0 }}>
+        <ReactSwitch
+          checked={!!on}
+          onChange={onChange}
+          onColor={accent || T.lime}
+          offColor={T.paperDeep}
+          onHandleColor={T.ink}
+          offHandleColor={T.ink}
+          handleDiameter={22}
+          uncheckedIcon={false}
+          checkedIcon={false}
+          height={30}
+          width={52}
+          boxShadow="0 0 0 1.5px rgba(0,0,0,0.12)"
+          activeBoxShadow="none"
+        />
+      </span>
     );
   }
   // Fallback if CDN fails to load
@@ -89,7 +92,7 @@ function Toggle({ on, onChange, accent }) {
       transition: 'background .15s ease',
     }}>
       <div style={{
-        position: 'absolute', top: 4, left: on ? 26 : 4,
+        position: 'absolute', top: 3, left: on ? 26 : 4,
         width: 22, height: 22, borderRadius: 999, background: T.ink,
         transition: 'left .18s cubic-bezier(.5,1.5,.5,1)',
       }} />
