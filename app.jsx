@@ -1347,6 +1347,76 @@ function ConfirmDialog({ open, title, body, confirmLabel = 'CONFIRM', cancelLabe
 }
 
 // ────────────────────────────────────────────────────────────
+// iOS "Add to Home Screen" banner
+// ────────────────────────────────────────────────────────────
+function IOSInstallBanner() {
+  const [show, setShow] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+    const isStandalone = window.navigator.standalone === true;
+    const dismissed = sessionStorage.getItem('a2hs_dismissed');
+    if (isIOS && !isStandalone && !dismissed) {
+      setShow(true);
+      requestAnimationFrame(() => requestAnimationFrame(() => setVisible(true)));
+    }
+  }, []);
+
+  const dismiss = () => {
+    setVisible(false);
+    sessionStorage.setItem('a2hs_dismissed', '1');
+    setTimeout(() => setShow(false), 320);
+  };
+
+  if (!show) return null;
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 9999,
+      background: T.ink, color: T.paper,
+      padding: '16px 18px 44px',
+      borderTopLeftRadius: 22, borderTopRightRadius: 22,
+      boxShadow: '0 -12px 40px rgba(0,0,0,0.4)',
+      transform: visible ? 'translateY(0)' : 'translateY(100%)',
+      transition: 'transform .32s cubic-bezier(.22,.9,.26,1)',
+      display: 'flex', alignItems: 'flex-start', gap: 14,
+    }}>
+      {/* App icon */}
+      <img src="/icon.svg" alt="" width="48" height="48" style={{
+        borderRadius: 11, flexShrink: 0, display: 'block',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+      }} />
+      <div style={{ flex: 1 }}>
+        <div style={{
+          fontFamily: 'Archivo Black, sans-serif', fontSize: 15,
+          color: T.paper, marginBottom: 5, letterSpacing: 0.2,
+        }}>Add to Home Screen</div>
+        <div style={{
+          fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.5,
+          color: T.paper, opacity: 0.65,
+        }}>
+          Tap the{' '}
+          {/* iOS share icon */}
+          <svg width="13" height="16" viewBox="0 0 13 16" style={{ display: 'inline-block', verticalAlign: 'middle', marginBottom: 1 }} fill="none">
+            <path d="M6.5 1v9" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+            <path d="M3.5 4L6.5 1L9.5 4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 7v7a1 1 0 001 1h9a1 1 0 001-1V7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+          {' '}button, then tap{' '}
+          <span style={{ fontWeight: 700, color: T.paper, opacity: 1 }}>"Add to Home Screen"</span>
+        </div>
+      </div>
+      <button onClick={dismiss} aria-label="Dismiss" style={{
+        background: 'transparent', border: 'none', cursor: 'pointer',
+        color: T.paper, opacity: 0.45, padding: '2px 4px', flexShrink: 0,
+        fontFamily: 'Archivo Black, sans-serif', fontSize: 22, lineHeight: 1,
+      }}>×</button>
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────
 // App
 // ────────────────────────────────────────────────────────────
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
@@ -1418,6 +1488,8 @@ function App() {
         {/* HintSheet removed — toggle lives directly on the settings row */}
         <HowToPlaySheet open={sheet === 'howto'} onClose={() => setSheet(null)} />
       </div>
+
+      <IOSInstallBanner />
 
       <TweaksPanel title="Tweaks">
         <TweakSection title="Theme">

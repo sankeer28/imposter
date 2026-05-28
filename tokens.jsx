@@ -56,19 +56,38 @@ const cardSx = {
   boxShadow: '0 8px 20px rgba(20,18,12,0.10), 0 2px 6px rgba(20,18,12,0.05)',
 };
 
+// Toggle — wraps react-switch (loaded via CDN as window.ReactSwitch).
+// Keeps the same { on, onChange, accent } API so no call sites need changing.
 function Toggle({ on, onChange, accent }) {
+  if (typeof ReactSwitch !== 'undefined') {
+    return (
+      <ReactSwitch
+        checked={!!on}
+        onChange={onChange}
+        onColor={accent || T.lime}
+        offColor={T.paperDeep}
+        onHandleColor={T.ink}
+        offHandleColor={T.ink}
+        handleDiameter={22}
+        uncheckedIcon={false}
+        checkedIcon={false}
+        height={30}
+        width={52}
+        boxShadow="0px 1px 5px rgba(0,0,0,0.22)"
+        activeBoxShadow="none"
+      />
+    );
+  }
+  // Fallback if CDN fails to load
   const ACCENT = accent || T.lime;
   return (
-    <button
-      onClick={() => onChange(!on)}
-      style={{
-        width: 52, height: 30, borderRadius: 999,
-        border: '1px solid rgba(0,0,0,0.05)',
-        background: on ? ACCENT : T.paperDeep,
-        position: 'relative', cursor: 'pointer',
-        boxShadow: on ? 'inset 0 0 0 1px rgba(0,0,0,0.08)' : 'none',
-        transition: 'background .15s ease',
-      }}>
+    <button onClick={() => onChange(!on)} style={{
+      width: 52, height: 30, borderRadius: 999,
+      border: '1px solid rgba(0,0,0,0.05)',
+      background: on ? ACCENT : T.paperDeep,
+      position: 'relative', cursor: 'pointer',
+      transition: 'background .15s ease',
+    }}>
       <div style={{
         position: 'absolute', top: 4, left: on ? 26 : 4,
         width: 22, height: 22, borderRadius: 999, background: T.ink,

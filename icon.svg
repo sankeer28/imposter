@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background — iOS clips to its own rounded rect, this fills the square -->
+  <rect width="512" height="512" fill="#EFE8D8"/>
+  <!-- Dark card inset -->
+  <rect x="48" y="48" width="416" height="416" rx="80" fill="#15161B"/>
+  <!-- "I" letterform — two crossbars + stem -->
+  <rect x="112" y="148" width="72" height="20" rx="10" fill="#EFE8D8"/>
+  <rect x="136" y="168" width="24" height="176" rx="10" fill="#EFE8D8"/>
+  <rect x="112" y="344" width="72" height="20" rx="10" fill="#EFE8D8"/>
+  <!-- Red question mark via path so it renders identically everywhere -->
+  <path d="M310 178 c0-28 22-50 56-50 36 0 58 22 58 52 0 26-16 42-36 56-12 8-18 18-18 32v8h-30v-12c0-22 10-38 28-52 14-10 22-20 22-34 0-16-12-26-28-26-18 0-28 12-28 28z" fill="#FF4A3D"/>
+  <rect x="340" y="298" width="30" height="30" rx="8" fill="#FF4A3D"/>
+</svg>

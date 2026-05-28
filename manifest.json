@@ -1,0 +1,24 @@
+{
+  "name": "Imposter Who?",
+  "short_name": "Imposter",
+  "description": "One secret word. One liar at the table. Ask, answer, accuse.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#EFE8D8",
+  "theme_color": "#15161B",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
