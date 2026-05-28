@@ -100,4 +100,13 @@ function Toggle({ on, onChange, accent }) {
   );
 }
 
-Object.assign(window, { T, THEMES, applyTheme, cardSx, Toggle });
+// haptic — multi-pulse intensity levels via tactus (window.triggerHaptic).
+// Each call to triggerHaptic fires one Taptic Engine pulse on iOS / one vibrate
+// on Android, so we chain multiple calls to produce heavier sensations.
+const haptic = {
+  light:  () => { window.triggerHaptic?.(25); },
+  medium: () => { window.triggerHaptic?.(40); setTimeout(() => window.triggerHaptic?.(40), 90); },
+  heavy:  () => { window.triggerHaptic?.(60); setTimeout(() => window.triggerHaptic?.(60), 75); setTimeout(() => window.triggerHaptic?.(60), 150); },
+};
+
+Object.assign(window, { T, THEMES, applyTheme, cardSx, Toggle, haptic });

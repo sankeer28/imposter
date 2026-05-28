@@ -56,7 +56,7 @@ function Sheet({ open, onClose, title, subtitle, children, confirmLabel = 'CONFI
         </div>
         {/* header */}
         <div style={{ padding: '14px 24px 12px', textAlign: 'center', position: 'relative' }}>
-          <button onClick={onClose} aria-label="close" style={{
+          <button onClick={() => { haptic.light(); onClose(); }} aria-label="close" style={{
             position: 'absolute', left: 18, top: 12,
             width: 32, height: 32, borderRadius: 999,
             border: '1px solid rgba(0,0,0,0.05)', background: T.card,
@@ -81,7 +81,7 @@ function Sheet({ open, onClose, title, subtitle, children, confirmLabel = 'CONFI
         {/* confirm */}
         {onConfirm && (
           <div style={{ padding: '12px 20px 30px', borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-            <button onClick={onConfirm} style={{
+            <button onClick={() => { haptic.medium(); onConfirm(); }} style={{
               width: '100%', height: 56, borderRadius: 16,
               border: '1px solid rgba(0,0,0,0.05)', background: ACCENT, color: T.ink,
               fontFamily: 'Archivo Black, sans-serif', fontSize: 17, letterSpacing: 1.5,
@@ -109,6 +109,7 @@ function DragList({ items, renderItem, onReorder, rowHeight = 60, gap = 8 }) {
   const onPointerDown = (e, idx) => {
     e.preventDefault();
     e.currentTarget.setPointerCapture(e.pointerId);
+    haptic.light();
     setDragIdx(idx);
     setHoverIdx(idx);
     setDragY(0);
@@ -198,11 +199,12 @@ function PlayersSheet({ open, onClose, players, setPlayers }) {
   const add = () => {
     const v = draft.trim();
     if (!v || local.length >= 20) return;
+    haptic.light();
     setLocal([...local, v.slice(0, 16)]);
     setDraft('');
     setTimeout(() => inputRef.current?.focus(), 0);
   };
-  const remove = (i) => setLocal(local.filter((_, j) => j !== i));
+  const remove = (i) => { haptic.light(); setLocal(local.filter((_, j) => j !== i)); };
   const rename = (i, v) => {
     const next = [...local]; next[i] = v.slice(0, 16); setLocal(next);
   };
@@ -348,6 +350,7 @@ function CategoriesSheet({ open, onClose, selected, setSelected, allCategories, 
 
   const toggle = (id) => {
     if (locked.includes(id)) return;
+    haptic.light();
     setLocal(local.includes(id) ? local.filter(s => s !== id) : [...local, id]);
   };
   return (
@@ -443,7 +446,7 @@ function ImpostersSheet({ open, onClose, value, setValue, playerCount }) {
     setLocal(clean);
     setText(String(clean));
   };
-  const step = (delta) => commit(local + delta);
+  const step = (delta) => { haptic.light(); commit(local + delta); };
 
   return (
     <Sheet

@@ -4,8 +4,7 @@
 
 const { useState, useEffect, useRef, useMemo } = React;
 
-// Haptic feedback — tactus loaded via module script; no-ops on unsupported platforms
-const haptic = (ms = 40) => window.triggerHaptic?.(ms);
+// haptic comes from tokens.jsx → window.haptic (light / medium / heavy)
 
 // Tokens (T, cardSx, Toggle) come from tokens.jsx → window.
 
@@ -63,7 +62,7 @@ const THEME_LABELS = { marigold: 'Marigold', tokyo: 'Tokyo', afterdark: 'Dark' }
 
 function PosterHeader({ onHelp, theme, onTheme }) {
   const next = () => {
-    haptic(20);
+    haptic.light();
     const i = THEME_ORDER.indexOf(theme);
     onTheme(THEME_ORDER[(i + 1) % THEME_ORDER.length]);
   };
@@ -76,6 +75,7 @@ function PosterHeader({ onHelp, theme, onTheme }) {
         <IconBtn label="?" onClick={onHelp} />
         {/* GitHub link */}
         <a href="https://github.com/sankeer28/imposter" target="_blank" rel="noopener noreferrer"
+          onClick={() => haptic.light()}
           style={{
             width: 36, height: 36, borderRadius: 999,
             border: '1px solid rgba(0,0,0,0.05)', background: T.card,
@@ -140,7 +140,7 @@ function PosterHeader({ onHelp, theme, onTheme }) {
 
 function IconBtn({ label, onClick }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={() => { haptic.light(); onClick?.(); }} style={{
       width: 36, height: 36, borderRadius: 999,
       border: '1px solid rgba(0,0,0,0.05)', background: T.card,
       fontFamily: 'Archivo Black, sans-serif', fontSize: 16,
@@ -163,7 +163,7 @@ function SettingsRow({ title, summary, onClick, right, children }) {
         cursor: clickable ? 'pointer' : 'default', display: 'block',
         transition: 'transform .08s ease',
       }}
-      onMouseDown={e => clickable && (e.currentTarget.style.transform = 'translateY(1px)')}
+      onMouseDown={e => { if (clickable) { haptic.light(); e.currentTarget.style.transform = 'translateY(1px)'; } }}
       onMouseUp={e => e.currentTarget.style.transform = 'translateY(0)'}
       onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -338,7 +338,7 @@ function CategoryIcon({ id, size = 22, color }) {
 
 function CategoriesCard({ selected, setSelected }) {
   const toggle = (id) => {
-    haptic(20);
+    haptic.light();
     setSelected(selected.includes(id) ? selected.filter(s => s !== id) : [...selected, id]);
   };
 
@@ -367,7 +367,7 @@ function CategoriesCard({ selected, setSelected }) {
 function ImpostersCard({ imposters, setImposters, playerCount }) {
   const max = Math.max(1, Math.floor(playerCount / 2));
   const stepper = (delta) => {
-    haptic(20);
+    haptic.light();
     const n = Math.min(max, Math.max(1, imposters + delta));
     setImposters(n);
   };
@@ -605,7 +605,7 @@ function StartBar({ state, onStart }) {
       background: `linear-gradient(to top, ${T.paper} 60%, rgba(239,232,216,0))`,
       pointerEvents: 'none',
     }}>
-      <button onClick={() => { haptic(50); onStart(); }} disabled={disabled} style={{
+      <button onClick={() => { haptic.heavy(); onStart(); }} disabled={disabled} style={{
         pointerEvents: 'auto',
         width: '100%', height: 64, borderRadius: 20,
         border: '1px solid rgba(0,0,0,0.05)',
@@ -819,7 +819,7 @@ function RevealScreen({ state, onBack }) {
   const cardColor = CARD_COLORS[step % CARD_COLORS.length];
 
   const next = () => {
-    haptic(40);
+    haptic.medium();
     setStep(step + 1);
   };
 
@@ -932,7 +932,7 @@ function PlayerCard({ playerName, step, color, isImposter, word, hint }) {
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch {}
     }
     downRef.current = true;
-    haptic(30);
+    haptic.medium();
     setFlipped(true);
   };
   const end = () => {
@@ -1205,7 +1205,7 @@ function DiscussionScreen({ state, word, imposterIndices, onBack }) {
           </div>
 
           <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <button onClick={() => { haptic(80); setRevealed(true); }} style={{
+            <button onClick={() => { haptic.heavy(); setRevealed(true); }} style={{
               width: '100%', height: 64, borderRadius: 999,
               background: T.card, color: T.ink,
               border: '1px solid rgba(0,0,0,0.05)', cursor: 'pointer',
