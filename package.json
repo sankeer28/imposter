@@ -1,0 +1,12 @@
+{
+  "name": "imposter-who",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Imposter Who? — social deduction party game",
+  "scripts": {
+    "screenshots": "node screenshot.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.44.0"
+  }
+}

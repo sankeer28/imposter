@@ -1428,18 +1428,40 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 function App() {
-  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  // Seed useTweaks with any cached theme so the first render is correct
+  const [tweaks, _setTweak] = useTweaks({
+    ...TWEAK_DEFAULTS,
+    theme: localStorage.getItem('imposter_theme') || TWEAK_DEFAULTS.theme,
+  });
+
+  // Wrap setTweak so theme changes are always mirrored to localStorage
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    _setTweak(keyOrEdits, val);
+    if (typeof keyOrEdits === 'string' && keyOrEdits === 'theme') {
+      localStorage.setItem('imposter_theme', val);
+    } else if (keyOrEdits && typeof keyOrEdits === 'object' && keyOrEdits.theme) {
+      localStorage.setItem('imposter_theme', keyOrEdits.theme);
+    }
+  }, [_setTweak]);
+
   const [screen, setScreen] = useState('setup');
   const [sheet, setSheet] = useState(null);
 
-  // Fade out the HTML loader once React is ready
+  // Fade out the HTML loader — wait for fonts + a minimum display time
   useEffect(() => {
     const el = document.getElementById('app-loader');
     if (!el) return;
-    el.style.transition = 'opacity 0.32s ease';
-    el.style.opacity = '0';
-    const t = setTimeout(() => el.remove(), 340);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    const hideLoader = () => {
+      if (cancelled) return;
+      el.style.transition = 'opacity 0.36s ease';
+      el.style.opacity = '0';
+      setTimeout(() => { if (!cancelled) el.remove(); }, 400);
+    };
+    // Fonts must be ready AND at least 1400 ms must have elapsed since mount
+    const minWait = new Promise(resolve => setTimeout(resolve, 1400));
+    Promise.all([document.fonts.ready, minWait]).then(hideLoader);
+    return () => { cancelled = true; };
   }, []);
   const [state, setState] = useState(() => {
     const savedPlayers = JSON.parse(localStorage.getItem('imposter_players') || 'null');

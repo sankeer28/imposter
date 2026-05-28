@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    html, body { margin: 0; padding: 0; background: #EFE8D8; font-family: 'Inter', system-ui, sans-serif; height: 100%; transition: background .4s ease; }
+    html, body { margin: 0; padding: 0; background: var(--loader-bg, #EFE8D8); font-family: 'Inter', system-ui, sans-serif; height: 100%; transition: background .4s ease; }
     #root { height: 100%; }
     * { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
     button:focus-visible { outline: 2px solid #15161B; outline-offset: 2px; }
@@ -32,7 +32,7 @@
     /* ── App loader ─────────────────────────────────── */
     #app-loader {
       position: fixed; inset: 0; z-index: 99999;
-      background: #EFE8D8;
+      background: var(--loader-bg, #EFE8D8);
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       pointer-events: none;
@@ -42,7 +42,7 @@
       font-family: 'Archivo Black', 'Arial Black', sans-serif;
       font-size: clamp(52px, 17vw, 78px);
       line-height: 0.87; letter-spacing: -2.5px;
-      color: #15161B; text-transform: uppercase;
+      color: var(--loader-fg, #15161B); text-transform: uppercase;
       animation: loaderUp .38s ease both;
     }
     .loader-line:nth-child(2) { animation-delay: .09s; }
@@ -71,6 +71,18 @@
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
   <!-- react-switch: prebuilt toggle library -->
   <script src="https://unpkg.com/react-switch@6.0.0/dist/react-switch.min.js" crossorigin="anonymous"></script>
+
+  <!-- Apply saved theme BEFORE first paint so the loader never flashes the wrong colour -->
+  <script>
+    (function () {
+      var BG = { marigold: '#EFE8D8', tokyo: '#FAFAFA', afterdark: '#0E0E10' };
+      var FG = { marigold: '#15161B', tokyo: '#0A2540', afterdark: '#EAE5D7' };
+      var t  = localStorage.getItem('imposter_theme') || 'marigold';
+      var r  = document.documentElement.style;
+      r.setProperty('--loader-bg', BG[t] || '#EFE8D8');
+      r.setProperty('--loader-fg', FG[t] || '#15161B');
+    })();
+  </script>
 </head>
 <body>
   <!-- Loader shown before React hydrates -->

@@ -4,6 +4,34 @@ A party deduction game for 3–20 players. One secret word. One liar at the tabl
 
 ---
 
+## Screenshots
+
+### Loading & Setup
+| Loader | Setup screen | Players sheet |
+|--------|-------------|---------------|
+| ![Loader](screenshots/01-loader.png) | ![Setup](screenshots/02-setup.png) | ![Players](screenshots/03-sheet-players.png) |
+
+### Sheets
+| Categories | Imposters | How To Play |
+|------------|-----------|-------------|
+| ![Categories](screenshots/04-sheet-categories.png) | ![Imposters](screenshots/05-sheet-imposters.png) | ![How To Play](screenshots/06-sheet-howtoplay.png) |
+
+### Reveal Flow
+| Loading word | Card front | Card back — word |
+|-------------|------------|-----------------|
+| ![Loading](screenshots/07-reveal-loading.png) | ![Card front](screenshots/08-card-front.png) | ![Word](screenshots/09-card-back-word.png) |
+
+| Card back — imposter | Discussion | Results |
+|---------------------|-----------|---------|
+| ![Imposter](screenshots/10-card-back-imposter.png) | ![Discussion](screenshots/11-discussion.png) | ![Results](screenshots/12-results.png) |
+
+### Themes
+| Marigold (default) | Tokyo | After Dark |
+|--------------------|-------|-----------|
+| ![Marigold](screenshots/02-setup.png) | ![Tokyo](screenshots/13-theme-tokyo.png) | ![After Dark](screenshots/14-theme-afterdark.png) |
+
+---
+
 ## How to Play
 
 1. **Gather your group** — pass the phone around the table, one player at a time.
